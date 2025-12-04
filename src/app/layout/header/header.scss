@@ -1,0 +1,90 @@
+ @import '../../../styles.scss'; // O la ruta correcta a tus variables
+
+.header {
+
+
+  background-color: var(--surface-light);
+  padding: 0 1rem;
+  display: flex;
+
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-light);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+
+  // Estilos para el modo oscuro
+  .dark & {
+    background-color: var(--surface-dark);
+    border-bottom-color: var(--border-dark);
+  }
+
+  .header-info {
+    .header-title {
+      font-size: 1.25rem; // 20px
+      font-weight: 600;
+      color: var(--text-light);
+
+      .dark & {
+        color: var(--text-dark);
+      }
+    }
+
+    .header-subtitle {
+      font-size: 0.875rem; // 14px
+      color: var(--text-secondary-light);
+
+      .dark & {
+        color: var(--text-secondary-dark);
+      }
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem; // 16px
+  }
+
+  .icon-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem; // 8px
+    color: var(--text-secondary-light);
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: var(--text-light); // Color al pasar el mouse
+
+      .dark & {
+        color: var(--text-dark);
+      }
+    }
+
+    .dark & { // Estilos del botón en modo oscuro
+      color: var(--text-secondary-dark);
+      &:hover {
+        color: var(--text-dark);
+      }
+    }
+
+    .material-icons {
+      font-size: 1.5rem; // 24px
+    }
+  }
+
+  .theme-toggle {
+    .light-mode-icon {
+      display: inline-block; // Visible por defecto
+      .dark & {
+        display: none; // Oculto en modo oscuro
+      }
+    }
+    .dark-mode-icon {
+      display: none; // Oculto por defecto
+      .dark & {
+        display: inline-block; // Visible en modo oscuro
+      }
+    }
+  }
+}
