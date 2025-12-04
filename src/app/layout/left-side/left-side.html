@@ -129,7 +129,7 @@
   </div>
 </aside>
 @if (isLoginModalVisible()) {
-<app-login-modal (close)="closeLoginModal()"></app-login-modal>
+<app-login-modal [appVersion]="appVersion" (close)="closeLoginModal()"></app-login-modal>
 }
 
 @if (showLogoutConfirm()) {

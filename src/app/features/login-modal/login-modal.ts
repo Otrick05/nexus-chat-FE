@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Output, Input, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
@@ -23,6 +23,7 @@ export class LoginModal {
   // --- Estado del Componente ---
   public isRegisterView = signal(false);
   public errorMessage = signal<string | null>(null);
+  @Input() appVersion: string = '';
 
   // NUEVO: Señal para bloquear botones e inputs
   public isLoading = signal(false);

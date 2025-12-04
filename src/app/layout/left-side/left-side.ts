@@ -6,6 +6,7 @@ import { LoginModal } from "../../features/login-modal/login-modal";
 import { AuthService } from '../../core/services/auth.service';
 import { AvatarUrlPipe } from '../../shared/pipes/avatar-url.pipe';
 import { Contact } from '../../core/models/contact.models';
+import packageInfo from '../../../../package.json';
 
 @Component({
   selector: 'app-left-side',
@@ -18,7 +19,7 @@ export class LeftSide {
   private authService = inject(AuthService);
   private contactService = inject(ContactService);
   private readyToFetch = signal(false);
-
+  public appVersion: string = packageInfo.version;
   public activeView: 'chats' | 'contacts' | 'settings' = 'chats';
   public isLoginModalVisible = signal(false);
   public currentUser = this.authService.currentUser;
