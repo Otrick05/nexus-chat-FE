@@ -1,1 +1,68 @@
 /* You can add global styles to this file, and also import other style files */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+
+
+:root {
+  /* Colores principales */
+  --primary: #4F3A6F;
+  --background-light: #F3F4F6;
+  --surface-light: #1d1a1a15;
+  --surface-lightv2: #fffefe;
+  --text-light: #111827;
+  --text-secondary-light: #6B7280;
+  --text-modal-light: #dbdcdf;
+  --border-light: #E0E0E0;
+  --background-light-hover: #E5E7EB;
+  --primary-rgb: 199, 74, 111;
+  --bubble-body-bg: #ffffffde;
+  /* Fuentes */
+  --font-display: 'Poppins', sans-serif;
+
+  /* Otros */
+  --border-radius-default: 0.5rem;
+
+  // Modo oscuro (valores por defecto si no se establece la clase 'dark')
+
+  --background-dark: #293341;
+  --surface-dark: #394558;
+  --text-dark: #F9FAFB;
+  --text-secondary-dark: #D1D5DB;
+  --border-dark: #444444;
+  --surface-dark-hover: #4B5563;
+  --primary-dark-rgb: 206, 147, 216;
+  --primary-dark: #c094fa;
+  --text-modal-dark: #1f1f3b;
+  --bubble-body-bg-dark: #36465c;
+}
+
+/* Modificación de variables para el tema oscuro */
+html.dark {
+
+  --background-light: var(--background-dark); // Sobreescribir para que el body use el dark bg
+  --surface-light: var(--surface-dark); // Sobreescribir para que los componentes usen el dark surface
+  --text-light: var(--text-dark); // Sobreescribir para que los componentes usen el dark text
+  --text-secondary-light: var(--text-secondary-dark);
+  --border-light: var(--border-dark);
+  --background-light-hover: var(--surface-dark-hover);
+  --primary: var(--primary-dark);
+  --text-modal-light: var(--text-modal-dark);
+  --bubble-body-bg: var(--bubble-body-bg-dark);
+}
+
+body {
+
+  height: 100vh;
+  margin: 0;
+
+  font-family: var(--font-display);
+  background-color: var(--background-light);
+  color: var(--text-light);
+
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.material-icons {
+  font-size: 24px;
+  vertical-align: middle;
+}

@@ -1,0 +1,14 @@
+.layout {
+  display: flex;
+  height: 100vh; // ocupar toda la pantalla
+}
+.main {
+  flex: 1; // ocupa todo el espacio restante
+  display: flex;
+  flex-direction: column; // header arriba, contenido abajo
+}
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}

@@ -1,0 +1,146 @@
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <img alt="Nexus Chat Logo" class="sidebar-logo" src="logoNCv2.png" />
+  </div>
+
+  <!-- NAVEGACIÓN PRINCIPAL -->
+  <nav class="sidebar-nav">
+    <a (click)="setView('chats')" class="nav-item" [class.active]="activeView === 'chats'">
+      <span class="material-icons">chat_bubble</span>
+      <span>Chats</span>
+    </a>
+    <a (click)="setView('contacts')" class="nav-item" [class.active]="activeView === 'contacts'">
+      <span class="material-icons">people</span>
+      <span>Contacts</span>
+    </a>
+    <a (click)="setView('settings')" class="nav-item" [class.active]="activeView === 'settings'">
+      <span class="material-icons">settings</span>
+      <span>Settings</span>
+    </a>
+  </nav>
+
+  <!-- ============================================= -->
+  <!-- NUEVA SECCIÓN DE CONTENIDO DINÁMICO -->
+  <!-- ============================================= -->
+  <div class="sidebar-content">
+    <div [ngSwitch]="activeView">
+
+      <!-- CASO: Mostrar Lista de Chats -->
+      <div *ngSwitchCase="'chats'">
+        <h3 class="content-title">Chats</h3>
+        <div class="chat-list">
+          <a *ngFor="let chat of chats" href="#" class="chat-item" [class.unread]="chat.unread > 0">
+            <img class="chat-avatar" src="https://placehold.co/40x40/4F3A6F/FFF?text={{chat.name.charAt(0)}}"
+              alt="avatar">
+            <div class="chat-info">
+              <span class="chat-name">{{ chat.name }}</span>
+              <span class="chat-message">{{ chat.lastMessage }}</span>
+            </div>
+            <div class="chat-meta">
+              <span class="chat-time">{{ chat.time }}</span>
+              <span *ngIf="chat.unread > 0" class="chat-unread-badge">{{ chat.unread }}</span>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <!-- CASO: Mostrar Lista de Contactos -->
+      <div *ngSwitchCase="'contacts'">
+        <h3 class="content-title">Contacts</h3>
+
+        @if (currentUser()) {
+        <div class="add-contact-section" style="display: flex; gap: 8px; padding: 0 16px 16px;">
+          <input type="email" [formControl]="newContactEmail" placeholder="Email del contacto"
+            (keyup.enter)="onAddContact()"
+            style="flex: 1; padding: 8px; border-radius: 4px; border: 1px solid #ccc; background: #333; color: white;">
+          <button (click)="onAddContact()" [disabled]="newContactEmail.invalid"
+            style="padding: 8px; border-radius: 4px; border: none; background: #7e57c2; color: white; cursor: pointer;">
+            <span class="material-icons" style="font-size: 20px;">add</span>
+          </button>
+        </div>
+
+        <div class="contact-list">
+          @for (contact of contactsList(); track contact.correo) {
+          <a href="#" class="contact-item">
+            <img class="contact-avatar" [src]="contact | avatarUrl" alt="avatar">
+            <div class="contact-info">
+              <span class="contact-name">{{ contact.nombreAppUsuario }}</span>
+              <span class="contact-email" style="font-size: 0.8em; opacity: 0.7;">{{ contact.correo }}</span>
+            </div>
+          </a>
+          }
+          @if (contactsList().length === 0) {
+          <p style="padding: 16px; text-align: center; opacity: 0.7;">No tienes contactos aún.</p>
+          }
+        </div>
+        } @else {
+        <!-- Demo contacts for guests -->
+        <div class="contact-list">
+          <a *ngFor="let contact of demoContacts" href="#" class="contact-item">
+            <img class="contact-avatar" src="https://placehold.co/40x40/7e57c2/FFF?text={{contact.name.charAt(0)}}"
+              alt="avatar">
+            <div class="contact-info">
+              <span class="contact-name">{{ contact.name }}</span>
+              <span class="contact-status {{ contact.status.toLowerCase() }}">{{ contact.status }}</span>
+            </div>
+          </a>
+        </div>
+        }
+      </div>
+
+      <!-- CASO: Mostrar Configuración -->
+      <div *ngSwitchCase="'settings'">
+        <h3 class="content-title">Settings</h3>
+        <p class="settings-placeholder">Opciones de configuración...</p>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <!-- PIE DE PÁGINA (No cambia) -->
+    @if (currentUser(); as user) {
+    <!-- CASO: Usuario LOGUEADO -->
+    <div class="user-profile-preview" (click)="toggleUserStatus()"> <!-- Click toggles status -->
+      <img alt="User avatar" class="user-avatar" [src]="user | avatarUrl" />
+      <div class="user-info">
+        <p class="user-name">{{ user.nombreUsuario }}</p>
+        <p class="user-status" [class]="userStatus().toLowerCase()"> {{ userStatus() }}</p>
+      </div>
+      <!-- Botón de Logout (ejemplo) -->
+      <button class="logout-button" (click)="onLogout(); $event.stopPropagation()">
+        <span class="material-icons">logout</span>
+      </button>
+    </div>
+    } @else {
+    <!-- CASO: Usuario DESLOGUEADO (Invitado) -->
+    <!-- Cumple con el requisito 2 (click abre modal) -->
+    <div class="user-profile-preview" (click)="openLoginModal()">
+      <!-- Imagen genérica (requisito 1) -->
+      <img alt="User avatar" class="user-avatar" src="https://placehold.co/40x40/6b7280/FFF?text=?" />
+      <div class="user-info">
+        <!-- Nombre "Login" (requisito 1) -->
+        <p class="user-name login-prompt"> Login</p>
+        <p class="user-status offline"> Offline</p>
+      </div>
+    </div>
+    }
+
+  </div>
+</aside>
+@if (isLoginModalVisible()) {
+<app-login-modal (close)="closeLoginModal()"></app-login-modal>
+}
+
+@if (showLogoutConfirm()) {
+<div class="modal-overlay">
+  <div class="modal-container logout-confirm">
+    <h3>Cerrar Sesión</h3>
+    <p>¿Estás seguro que deseas salir?</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" (click)="cancelLogout()">Cancelar</button>
+      <button class="btn-confirm" (click)="confirmLogout()">Salir</button>
+    </div>
+  </div>
+</div>
+}

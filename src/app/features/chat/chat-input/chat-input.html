@@ -1,0 +1,8 @@
+<div class="input-container">
+      <button><span class="material-icons">add_circle_outline</span></button>
+      <input type="text" [(ngModel)]="messageText" (keyup.enter)="sendMessage()" placeholder="Type a message...">
+      <button><span class="material-icons">sentiment_satisfied_alt</span></button>
+      <button class="send-btn" (click)="sendMessage()">
+        <span class="material-icons">send</span>
+      </button>
+    </div>
