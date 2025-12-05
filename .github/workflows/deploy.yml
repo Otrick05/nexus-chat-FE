@@ -55,14 +55,21 @@ jobs:
         SOURCE_DIR="dist/nexus-chat/browser/*" 
         # -----------------------
         
-        echo "Copiando archivos a $VM_NAME..."
-        
-        # El comando mágico SCP vía IAP
-        gcloud compute scp --recurse $SOURCE_DIR $VM_NAME:/var/www/html/ \
+        gcloud compute ssh $VM_NAME --zone=$ZONE --tunnel-through-iap --command="rm -rf /tmp/webapp_deploy"
+
+        echo "2. Subiendo archivos a carpeta temporal (/tmp)..."
+        # Subimos la CARPETA entera a /tmp
+        gcloud compute scp --recurse $SOURCE_DIR $VM_NAME:/tmp/webapp_deploy \
           --project=$PROJECT_ID \
           --zone=$ZONE \
           --tunnel-through-iap \
           --quiet
+
+        echo "3. Moviendo archivos a destino final con SUDO..."
+        # Borramos lo viejo en /var/www/html y movemos lo nuevo
+        # Nota: Ajustamos la ruta porque scp crea la carpeta 'browser' dentro de 'webapp_deploy'
+        gcloud compute ssh $VM_NAME --zone=$ZONE --tunnel-through-iap \
+          --command="sudo rm -rf /var/www/html/* && sudo cp -r /tmp/webapp_deploy/browser/* /var/www/html/"
 
     # 7. Manda los archivos a la VM 2 (Espejo)
     - name: Desplegar a VM 2
@@ -76,13 +83,18 @@ jobs:
 
         echo "Copiando archivos a $VM_NAME..."
         
-        gcloud compute scp --recurse $SOURCE_DIR $VM_NAME:/var/www/html/ \
+        gcloud compute ssh $VM_NAME --zone=$ZONE --tunnel-through-iap --command="rm -rf /tmp/webapp_deploy"
+        
+        # 2. Subida a temp
+        gcloud compute scp --recurse $SOURCE_DIR $VM_NAME:/tmp/webapp_deploy \
           --project=$PROJECT_ID \
           --zone=$ZONE \
           --tunnel-through-iap \
           --quiet
-
-    # 8. Reinicia Nginx para asegurar que tome cambios (si fuera necesario)
+          
+        # 3. Sudo Move
+        gcloud compute ssh $VM_NAME --zone=$ZONE --tunnel-through-iap \
+          --command="sudo rm -rf /var/www/html/* && sudo cp -r /tmp/webapp_deploy/browser/* /var/www/html/"
     - name: Reiniciar Nginx
       run: |
         # VM 1
