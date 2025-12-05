@@ -52,24 +52,24 @@ jobs:
         
         # Revisa en tu compu local: haz 'ng build' y mira cómo se llama la carpeta dentro de dist
         # Usualmente es dist/nombre-de-tu-app/browser/*
-        SOURCE_DIR="dist/nexus-chat/browser/*" 
-        # -----------------------
+        SOURCE_DIR="dist/nexus-chat/browser" 
         
+        echo "1. Limpiando temporal anterior en $VM_NAME..."
         gcloud compute ssh $VM_NAME --zone=$ZONE --tunnel-through-iap --command="rm -rf /tmp/webapp_deploy"
 
-        echo "2. Subiendo archivos a carpeta temporal (/tmp)..."
-        # Subimos la CARPETA entera a /tmp
+        echo "2. Subiendo archivos a carpeta temporal..."
+        # Al subir 'browser' a 'webapp_deploy' (que no existe), se renombra.
+        # Los archivos quedan directo en /tmp/webapp_deploy/
         gcloud compute scp --recurse $SOURCE_DIR $VM_NAME:/tmp/webapp_deploy \
           --project=$PROJECT_ID \
           --zone=$ZONE \
           --tunnel-through-iap \
           --quiet
 
-        echo "3. Moviendo archivos a destino final con SUDO..."
-        # Borramos lo viejo en /var/www/html y movemos lo nuevo
-        # Nota: Ajustamos la ruta porque scp crea la carpeta 'browser' dentro de 'webapp_deploy'
+        echo "3. Moviendo archivos a destino final..."
+        # CORRECCIÓN: Quitamos '/browser' de la ruta de origen
         gcloud compute ssh $VM_NAME --zone=$ZONE --tunnel-through-iap \
-          --command="sudo rm -rf /var/www/html/* && sudo cp -r /tmp/webapp_deploy/browser/* /var/www/html/"
+          --command="sudo rm -rf /var/www/html/* && sudo cp -r /tmp/webapp_deploy/* /var/www/html/"
 
     # 7. Manda los archivos a la VM 2 (Espejo)
     - name: Desplegar a VM 2
@@ -78,23 +78,23 @@ jobs:
         PROJECT_ID="computo-en-la-nube-is503"
         ZONE="us-central1-a"   # Zona de tu VM2
         VM_NAME="imagen-nexuschat-v1-20251107-010149"
-        SOURCE_DIR="dist/nexus-chat/browser/*"
-        # -----------------------
+        SOURCE_DIR="dist/nexus-chat/browser"
 
-        echo "Copiando archivos a $VM_NAME..."
+        echo "Desplegando en $VM_NAME..."
         
+        # 1. Limpieza
         gcloud compute ssh $VM_NAME --zone=$ZONE --tunnel-through-iap --command="rm -rf /tmp/webapp_deploy"
         
-        # 2. Subida a temp
+        # 2. Subida
         gcloud compute scp --recurse $SOURCE_DIR $VM_NAME:/tmp/webapp_deploy \
           --project=$PROJECT_ID \
           --zone=$ZONE \
           --tunnel-through-iap \
           --quiet
           
-        # 3. Sudo Move
+        # 3. Sudo Move (CORREGIDO: sin /browser)
         gcloud compute ssh $VM_NAME --zone=$ZONE --tunnel-through-iap \
-          --command="sudo rm -rf /var/www/html/* && sudo cp -r /tmp/webapp_deploy/browser/* /var/www/html/"
+          --command="sudo rm -rf /var/www/html/* && sudo cp -r /tmp/webapp_deploy/* /var/www/html/"
     - name: Reiniciar Nginx
       run: |
         # VM 1
