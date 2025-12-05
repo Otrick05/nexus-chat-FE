@@ -1,0 +1,91 @@
+name: Despliegue a Producción (GCP IAP)
+
+# Esto define cuándo se ejecuta: al hacer push a la rama 'main'
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. GitHub baja tu código
+    - name: Checkout del código
+      uses: actions/checkout@v4
+
+    # 2. Prepara Node.js (versión 20 es estándar hoy)
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    # 3. Instala librerías y compila Angular
+    - name: Instalar y Construir (Build)
+      run: |
+        npm ci
+        npx ng build --configuration production
+      # ESTO CREARÁ LA CARPETA 'dist' EN EL SERVIDOR DE GITHUB
+
+    # 4. Se identifica con la llave secreta que subiste a GitHub
+    - name: Auth con Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+    # 5. Instala las herramientas de comando de Google (gcloud)
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+
+    # ---------------------------------------------------------
+    # IMPORTANTE: A partir de aquí edita con TUS datos reales
+    # ---------------------------------------------------------
+
+    # 6. Manda los archivos a la VM 1
+    - name: Desplegar a VM 1
+      run: |
+        # --- ZONA DE EDICIÓN ---
+        PROJECT_ID="computo-en-la-nube-is503" 
+        ZONE="us-central1-a"   # La zona de tu VM1 (ej. us-central1-a)
+        VM_NAME="vm-computo-is-503"
+        
+        # Revisa en tu compu local: haz 'ng build' y mira cómo se llama la carpeta dentro de dist
+        # Usualmente es dist/nombre-de-tu-app/browser/*
+        SOURCE_DIR="dist/nexus-chat/browser/*" 
+        # -----------------------
+        
+        echo "Copiando archivos a $VM_NAME..."
+        
+        # El comando mágico SCP vía IAP
+        gcloud compute scp --recurse $SOURCE_DIR $VM_NAME:/var/www/html/ \
+          --project=$PROJECT_ID \
+          --zone=$ZONE \
+          --tunnel-through-iap \
+          --quiet
+
+    # 7. Manda los archivos a la VM 2 (Espejo)
+    - name: Desplegar a VM 2
+      run: |
+        # --- ZONA DE EDICIÓN ---
+        PROJECT_ID="computo-en-la-nube-is503"
+        ZONE="us-central1-a"   # Zona de tu VM2
+        VM_NAME="imagen-nexuschat-v1-20251107-010149"
+        SOURCE_DIR="dist/nexus-chat/browser/*"
+        # -----------------------
+
+        echo "Copiando archivos a $VM_NAME..."
+        
+        gcloud compute scp --recurse $SOURCE_DIR $VM_NAME:/var/www/html/ \
+          --project=$PROJECT_ID \
+          --zone=$ZONE \
+          --tunnel-through-iap \
+          --quiet
+
+    # 8. Reinicia Nginx para asegurar que tome cambios (si fuera necesario)
+    - name: Reiniciar Nginx
+      run: |
+        # VM 1
+        gcloud compute ssh vm-computo-is-503 --zone=us-central1-a --tunnel-through-iap --command="sudo systemctl reload nginx"
+        # VM 2
+        gcloud compute ssh imagen-nexuschat-v1-20251107-010149 --zone=us-central1-a --tunnel-through-iap --command="sudo systemctl reload nginx"
