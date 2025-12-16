@@ -1,11 +1,13 @@
 import { JwtPayload } from './../models/jwt-payload.models';
 import { Injectable, signal, PLATFORM_ID, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap, of, catchError, map } from 'rxjs';
+import { Observable, tap, of, catchError, map, retry } from 'rxjs';
 import { Usuario } from '../models/usuario.models';
 import { LoginRequest } from '../models/login-request.models';
 import { SignupRequest } from '../models/signup-request.model';
 import { isPlatformBrowser } from '@angular/common';
+
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +15,7 @@ import { isPlatformBrowser } from '@angular/common';
 export class AuthService {
   public currentUser = signal<Usuario | null>(null);
   private readonly platformId = inject(PLATFORM_ID);
-  private readonly API_URL = 'http://localhost:8080/api';
+  private readonly API_URL = environment.apiUrl;
 
   constructor(private http: HttpClient) {
     this.checkInitialAuth();
@@ -55,6 +57,7 @@ export class AuthService {
 
   fetchUserProfile(correo: string): Observable<Usuario | null> {
     return this.http.get<Usuario>(`${this.API_URL}/perfil-usuario/${correo}`).pipe(
+      retry({ count: 3, delay: 1000 }),
       catchError(() => of(null)) // Si falla, devuelve null
     );
   }
@@ -137,5 +140,43 @@ export class AuthService {
       return localStorage.getItem('jwt');
     }
     return null;
+  }
+  /**
+   * Updates the display name (nombreAppUsuario).
+   */
+  updateDisplayName(newName: string): Observable<Usuario> {
+    // Placeholder endpoint
+    return this.http.put<any>(`${this.API_URL}/perfil-usuario/actualizar-nombre`, {
+      nombreAppUsuario: newName
+    }).pipe(
+      tap(response => {
+        // Assuming backend returns the updated user or we update it locally
+        const currentUser = this.currentUser();
+        if (currentUser) {
+          this.currentUser.set({ ...currentUser, nombreAppUsuario: newName });
+        }
+      })
+    );
+  }
+
+  /**
+   * Updates the password.
+   * Handles JWT renewal if provided in the response.
+   */
+  updatePassword(current: string, newPass: string): Observable<boolean> {
+    // Placeholder endpoint
+    return this.http.put<any>(`${this.API_URL}/auth/actualizar-password`, {
+      currentPassword: current,
+      newPassword: newPass
+    }).pipe(
+      tap(response => {
+        console.log('Password update response:', response);
+        const token = response?.jwt || response?.token || response?.access_token;
+        if (token) {
+          this.handleAuthSuccess(token); // Update JWT and user state
+        }
+      }),
+      map(() => true)
+    );
   }
 }

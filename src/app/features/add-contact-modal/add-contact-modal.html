@@ -1,0 +1,40 @@
+<div class="modal-overlay" (click)="onClose()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+        <h3>Agregar Contacto</h3>
+
+        <!-- Search Section -->
+        <div class="search-section" *ngIf="!foundContact()">
+            <div class="input-group">
+                <input type="email" [ngModel]="searchEmail()" (ngModelChange)="searchEmail.set($event)"
+                    (keyup.enter)="onSearch()" placeholder="Buscar por correo electrónico" [disabled]="isSearching()">
+                <button (click)="onSearch()" [disabled]="!searchEmail() || isSearching()" class="btn-search">
+                    <span class="material-icons">search</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Preview Section -->
+        <div class="preview-section" *ngIf="foundContact() as contact">
+            <div class="contact-preview">
+                <img [src]="contact | avatarUrl" alt="Avatar" class="avatar-preview">
+                <div class="info">
+                    <p class="name">{{ contact.nombreAppUsuario }}</p>
+                    <p class="email">{{ contact.correo }}</p>
+                </div>
+            </div>
+        </div>
+
+        <p *ngIf="errorMessage()" class="error-msg"
+            style="text-align: center; color: var(--error-color, red); margin: 10px 0;">{{ errorMessage() }}</p>
+
+        <!-- Actions -->
+        <div class="modal-actions">
+            @if (foundContact()) {
+            <button class="btn-secondary" (click)="onClear()">Buscar otro</button>
+            <button class="btn-primary" (click)="onAdd()">Agregar</button>
+            } @else {
+            <button class="btn-secondary" (click)="onClose()">Salir</button>
+            }
+        </div>
+    </div>
+</div>

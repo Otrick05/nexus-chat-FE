@@ -25,11 +25,45 @@
   <div class="sidebar-content">
     <div [ngSwitch]="activeView">
 
-      <!-- CASO: Mostrar Lista de Chats -->
       <div *ngSwitchCase="'chats'">
-        <h3 class="content-title">Chats</h3>
+        <div class="section-header"
+          style="display: flex; justify-content: space-between; align-items: center; padding-right: 0.5rem; margin-bottom: 1rem;">
+          <h3 class="content-title" style="margin-bottom: 0;">Chats</h3>
+
+          @if (currentUser()) {
+          <button class="btn-icon-primary" (click)="openCreateGroupModal()" title="Iniciar chat de grupo">
+            <span class="material-icons">groups</span>
+          </button>
+          }
+        </div>
+
+        @if (currentUser()) {
+        <!-- REAL CHATS -->
         <div class="chat-list">
-          <a *ngFor="let chat of chats" href="#" class="chat-item" [class.unread]="chat.unread > 0">
+          @for (chat of chatsList(); track chat.id) {
+          <a class="chat-item" (click)="onSelectChat(chat)" [class.unread]="chat.conteoNoLeidos > 0">
+            <img class="chat-avatar" [src]="chat | avatarUrl" alt="avatar">
+            <div class="chat-info">
+              <span class="chat-name">{{ chat.nombre }}</span>
+              <span class="chat-message">
+                {{ chat.ultimoMensaje?.contenido || 'No hay mensajes' }}
+              </span>
+            </div>
+            <div class="chat-meta">
+              <!-- Parse date properly if needed, for now just show fallback/time -->
+              <span class="chat-time">{{ chat.ultimoMensaje?.timestamp | date:'shortTime' }}</span>
+              <span *ngIf="chat.conteoNoLeidos > 0" class="chat-unread-badge">{{ chat.conteoNoLeidos }}</span>
+            </div>
+          </a>
+          }
+          @if (chatsList().length === 0) {
+          <p style="padding: 16px; text-align: center; opacity: 0.7;">No tienes chats activos.</p>
+          }
+        </div>
+        } @else {
+        <!-- DEMO CHATS -->
+        <div class="chat-list">
+          <a *ngFor="let chat of demoChats" href="#" class="chat-item" [class.unread]="chat.unread > 0">
             <img class="chat-avatar" src="https://placehold.co/40x40/4F3A6F/FFF?text={{chat.name.charAt(0)}}"
               alt="avatar">
             <div class="chat-info">
@@ -42,29 +76,31 @@
             </div>
           </a>
         </div>
+        }
       </div>
 
       <!-- CASO: Mostrar Lista de Contactos -->
       <div *ngSwitchCase="'contacts'">
-        <h3 class="content-title">Contacts</h3>
+        <div class="section-header"
+          style="display: flex; justify-content: space-between; align-items: center; padding-right: 0.5rem; margin-bottom: 1rem;">
+          <h3 class="content-title" style="margin-bottom: 0;">Contacts</h3>
 
-        @if (currentUser()) {
-        <div class="add-contact-section" style="display: flex; gap: 8px; padding: 0 16px 16px;">
-          <input type="email" [formControl]="newContactEmail" placeholder="Email del contacto"
-            (keyup.enter)="onAddContact()"
-            style="flex: 1; padding: 8px; border-radius: 4px; border: 1px solid #ccc; background: #333; color: white;">
-          <button (click)="onAddContact()" [disabled]="newContactEmail.invalid"
-            style="padding: 8px; border-radius: 4px; border: none; background: #7e57c2; color: white; cursor: pointer;">
-            <span class="material-icons" style="font-size: 20px;">add</span>
+          @if (currentUser()) {
+          <button class="btn-icon-primary" (click)="openAddContactModal()" title="Agregar Contacto">
+            <span class="material-icons">add</span>
           </button>
+          }
         </div>
 
+        @if (currentUser()) {
         <div class="contact-list">
           @for (contact of contactsList(); track contact.correo) {
-          <a href="#" class="contact-item">
+          <a class="contact-item" (click)="onSelectContact(contact)">
             <img class="contact-avatar" [src]="contact | avatarUrl" alt="avatar">
             <div class="contact-info">
-              <span class="contact-name">{{ contact.nombreAppUsuario }}</span>
+              <span class="contact-name" [title]="contact.nombreAppUsuario || contact.nombreUsuario || contact.correo">
+                {{ contact.nombreAppUsuario || contact.nombreUsuario || (contact.correo.split('@')[0] | titlecase) }}
+              </span>
               <span class="contact-email" style="font-size: 0.8em; opacity: 0.7;">{{ contact.correo }}</span>
             </div>
           </a>
@@ -91,7 +127,31 @@
       <!-- CASO: Mostrar Configuración -->
       <div *ngSwitchCase="'settings'">
         <h3 class="content-title">Settings</h3>
-        <p class="settings-placeholder">Opciones de configuración...</p>
+
+        @if (currentUser()) {
+        <div class="settings-list">
+          <div class="settings-item" (click)="openChangeNameModal()">
+            <span class="material-icons">badge</span>
+            <div class="settings-info">
+              <span class="settings-label">Nombre de visualización</span>
+              <span class="settings-desc">Cambia como te ven los demás</span>
+            </div>
+          </div>
+
+          <div class="settings-item" (click)="openChangePasswordModal()">
+            <span class="material-icons">lock</span>
+            <div class="settings-info">
+              <span class="settings-label">Contraseña</span>
+              <span class="settings-desc">Cambia tu contraseña</span>
+            </div>
+          </div>
+        </div>
+        } @else {
+        <div class="settings-placeholder-container">
+          <span class="material-icons">lock_outline</span>
+          <p>Inicia sesión para acceder a la configuración</p>
+        </div>
+        }
       </div>
 
     </div>
@@ -143,4 +203,22 @@
     </div>
   </div>
 </div>
+}
+
+@if (isAddContactModalVisible()) {
+<app-add-contact-modal (close)="closeAddContactModal()" (contactAdded)="onContactAdded()">
+</app-add-contact-modal>
+}
+
+@if (isChangeNameModalVisible()) {
+<app-change-name-modal (close)="closeChangeNameModal()"></app-change-name-modal>
+}
+
+@if (isChangePasswordModalVisible()) {
+<app-change-password-modal (close)="closeChangePasswordModal()"></app-change-password-modal>
+}
+
+@if (isCreateGroupModalVisible()) {
+<app-create-group-modal (close)="closeCreateGroupModal()" (groupCreated)="onGroupCreated()">
+</app-create-group-modal>
 }

@@ -1,0 +1,42 @@
+<div class="modal-overlay" (click)="onClose()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+        <h3>Crear Grupo</h3>
+
+        <!-- Group Name Input -->
+        <div class="input-group">
+            <input type="text" [ngModel]="groupName()" (ngModelChange)="groupName.set($event)"
+                placeholder="Nombre del grupo" [disabled]="isCreating()">
+        </div>
+
+        <!-- Contact List -->
+        <div class="contact-list-container">
+            <h4>Seleccionar Componentes</h4>
+            @if (contacts().length === 0) {
+            <p class="no-contacts">No tienes contactos añadidos.</p>
+            }
+            <div class="contact-list">
+                @for (contact of contacts(); track contact.correo) {
+                <div class="contact-item" (click)="toggleContact(contact.correo)">
+                    <input type="checkbox" [checked]="selectedContacts().has(contact.correo)"
+                        (click)="$event.stopPropagation(); toggleContact(contact.correo)">
+                    <img [src]="contact | avatarUrl" alt="Avatar" class="avatar-small">
+                    <span class="contact-name">{{ contact.nombreAppUsuario || contact.nombreUsuario || contact.correo
+                        }}</span>
+                </div>
+                }
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <p *ngIf="errorMessage()" class="error-msg"
+            style="text-align: center; color: var(--error-color, red); margin: 10px 0;">{{ errorMessage() }}</p>
+
+        <!-- Actions -->
+        <div class="modal-actions">
+            <button class="btn-secondary" (click)="onClose()" [disabled]="isCreating()">Cancelar</button>
+            <button class="btn-primary" (click)="onCreate()" [disabled]="!canCreate() || isCreating()">
+                {{ isCreating() ? 'Creando...' : 'Crear Grupo' }}
+            </button>
+        </div>
+    </div>
+</div>

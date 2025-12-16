@@ -1,0 +1,55 @@
+<div class="modal-overlay" (click)="onClose()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3>Cambiar nombre de visualización</h3>
+            <button class="btn-icon" (click)="onClose()">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="displayName">Nuevo nombre</label>
+                <input type="text" id="displayName" [(ngModel)]="newName" placeholder="Ej. Juan Pérez"
+                    (keyup.enter)="onSave()">
+
+                @if (newName()) {
+                <div class="validation-feedback">
+                    @if (isValid()) {
+                    <span class="material-icons success">check_circle</span>
+                    <span class="success-text">Mínimo 3 caracteres</span>
+                    } @else {
+                    <span class="material-icons error">cancel</span>
+                    <span class="error-text">Mínimo 3 caracteres</span>
+                    }
+                </div>
+                }
+            </div>
+
+            @if (errorMessage()) {
+            <div class="error-message">
+                <span class="material-icons">error_outline</span>
+                <span>{{ errorMessage() }}</span>
+            </div>
+            }
+
+            @if (successMessage()) {
+            <div class="success-message">
+                <span class="material-icons">check_circle</span>
+                <span>{{ successMessage() }}</span>
+            </div>
+            }
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn-cancel" (click)="onClose()">Cancelar</button>
+            <button class="btn-primary" (click)="onSave()" [disabled]="isSaving() || !newName().trim()">
+                @if (isSaving()) {
+                <span class="spinner"></span>
+                } @else {
+                Guardar
+                }
+            </button>
+        </div>
+    </div>
+</div>

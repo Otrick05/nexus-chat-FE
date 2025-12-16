@@ -1,0 +1,20 @@
+<div class="modal-overlay" (click)="onClose()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+        <h3>Editar Grupo</h3>
+
+        <div class="input-group">
+            <label for="groupName" style="display:block; margin-bottom: 5px; color: #ccc;">Nombre del grupo</label>
+            <input id="groupName" type="text" [ngModel]="groupName()" (ngModelChange)="groupName.set($event)"
+                [disabled]="isSaving()" placeholder="Nuevo nombre">
+        </div>
+
+        <p *ngIf="errorMessage()" class="error-msg">{{ errorMessage() }}</p>
+
+        <div class="modal-actions">
+            <button class="btn-secondary" (click)="onClose()" [disabled]="isSaving()">Cancelar</button>
+            <button class="btn-primary" (click)="onSave()" [disabled]="!groupName().trim() || isSaving()">
+                {{ isSaving() ? 'Guardando...' : 'Guardar' }}
+            </button>
+        </div>
+    </div>
+</div>

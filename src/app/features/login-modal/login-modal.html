@@ -21,15 +21,43 @@
             <div class="form-group">
               <label for="login-email">Email</label>
               <input id="login-email" type="email" formControlName="correo" placeholder="tu@email.com">
+              @if (loginForm.get('correo')?.dirty || loginForm.get('correo')?.touched) {
+              <div class="validation-feedback">
+                @if (loginForm.get('correo')?.invalid) {
+                <span class="material-icons error">cancel</span>
+                <span class="error-text">Formato inválido</span>
+                } @else {
+                <span class="material-icons success">check_circle</span>
+                }
+              </div>
+              }
             </div>
             <div class="form-group">
               <label for="login-password">Contraseña</label>
               <input id="login-password" type="password" formControlName="password" placeholder="••••••••">
             </div>
 
-            <p *ngIf="errorMessage()" class="error-message">{{ errorMessage() }}</p>
+            @if (errorMessage()) {
+            <div class="error-message">
+              <span class="material-icons">error_outline</span>
+              <span>{{ errorMessage() }}</span>
+            </div>
+            }
 
-            <button type="submit" class="submit-btn" [disabled]="loginForm.invalid">Entrar</button>
+            @if (successMessage()) {
+            <div class="success-message">
+              <span class="material-icons">check_circle</span>
+              <span>{{ successMessage() }}</span>
+            </div>
+            }
+
+            <button type="submit" class="submit-btn" [disabled]="loginForm.invalid || isSaving()">
+              @if (isSaving()) {
+              <span class="spinner"></span>
+              } @else {
+              Entrar
+              }
+            </button>
           </form>
 
           <p class="toggle-link">
@@ -63,20 +91,75 @@
           <form [formGroup]="registerForm" (ngSubmit)="onRegister()">
             <div class="form-group">
               <label for="reg-name">Nombre</label>
-              <input id="reg-name" type="text" formControlName="nombreUsuario" placeholder="Tu Nombre">
+              <input id="reg-name" type="text" formControlName="nombreUsuario" placeholder="Tu Nombre"
+                (input)="onNameInput($event)">
+              @if (registerForm.get('nombreUsuario')?.dirty || registerForm.get('nombreUsuario')?.touched) {
+              <div class="validation-feedback">
+                @if (registerForm.get('nombreUsuario')?.invalid) {
+                @if (registerForm.get('nombreUsuario')?.hasError('required')) {
+                <span class="material-icons error">cancel</span>
+                <span class="error-text">Requerido</span>
+                } @else if (registerForm.get('nombreUsuario')?.hasError('oneWord')) {
+                <span class="material-icons error">cancel</span>
+                <span class="error-text">Nombre y Apellido</span>
+                }
+                } @else {
+                <span class="material-icons success">check_circle</span>
+                }
+              </div>
+              }
             </div>
             <div class="form-group">
               <label for="reg-email">Email</label>
               <input id="reg-email" type="email" formControlName="correo" placeholder="tu@email.com">
+              @if (registerForm.get('correo')?.dirty || registerForm.get('correo')?.touched) {
+              <div class="validation-feedback">
+                @if (registerForm.get('correo')?.invalid) {
+                <span class="material-icons error">cancel</span>
+                <span class="error-text">Formato inválido</span>
+                } @else {
+                <span class="material-icons success">check_circle</span>
+                }
+              </div>
+              }
             </div>
             <div class="form-group">
               <label for="reg-password">Contraseña</label>
               <input id="reg-password" type="password" formControlName="password" placeholder="Mínimo 6 caracteres">
+              @if (registerForm.get('password')?.dirty || registerForm.get('password')?.touched) {
+              <div class="validation-feedback">
+                @if (registerForm.get('password')?.invalid) {
+                <span class="material-icons error">cancel</span>
+                <span class="error-text">Mínimo 6 caracteres</span>
+                } @else {
+                <span class="material-icons success">check_circle</span>
+                <span class="success-text">Segura</span>
+                }
+              </div>
+              }
             </div>
 
-            <p *ngIf="errorMessage()" class="error-message">{{ errorMessage() }}</p>
+            @if (errorMessage()) {
+            <div class="error-message">
+              <span class="material-icons">error_outline</span>
+              <span>{{ errorMessage() }}</span>
+            </div>
+            }
 
-            <button type="submit" class="submit-btn" [disabled]="registerForm.invalid">Registrarse</button>
+            @if (successMessage()) {
+            <div class="success-message">
+              <span class="material-icons">check_circle</span>
+              <span>{{ successMessage() }}</span>
+            </div>
+            }
+
+            <button type="submit" class="submit-btn" [disabled]="registerForm.invalid || isSaving()">
+              @if (isSaving()) {
+              <span class="spinner"></span>
+              } @else {
+              Registrarse
+              }
+            </button>
           </form>
 
           <p class="toggle-link">

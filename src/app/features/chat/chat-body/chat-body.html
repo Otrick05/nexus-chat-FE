@@ -1,14 +1,12 @@
-<div *ngFor="let msg of mensajes()"
-         class="message-row"
-         [ngClass]="{'outgoing': msg.isOwn, 'incoming': !msg.isOwn}">
+<div *ngFor="let msg of mensajes()" class="message-row" [ngClass]="{'outgoing': msg.isOwn, 'incoming': !msg.isOwn}">
 
-      <img *ngIf="!msg.isOwn" [src]="msg.avatar" class="avatar">
+  <img *ngIf="!msg.isOwn" [src]="msg.senderObj | avatarUrl" class="avatar">
 
-      <div class="bubble">
-        <p *ngIf="!msg.isOwn" class="sender">{{ msg.sender }}</p>
-        <p>{{ msg.text }}</p>
-        <span class="time">{{ msg.time }}</span>
-      </div>
+  <div class="bubble">
+    <p *ngIf="!msg.isOwn" class="sender">{{ msg.sender }}</p>
+    <p>{{ msg.text }}</p>
+    <span class="time">{{ msg.time }}</span>
+  </div>
 
-      <img *ngIf="msg.isOwn" [src]="msg.avatar" class="avatar">
-    </div>
+  <img *ngIf="msg.isOwn" [src]="msg.senderObj | avatarUrl" class="avatar">
+</div>

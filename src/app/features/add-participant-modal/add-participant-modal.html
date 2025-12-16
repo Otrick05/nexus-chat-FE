@@ -1,0 +1,51 @@
+<div class="modal-overlay" (click)="onClose()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+
+        <!-- Header / Toggle -->
+        <div class="modal-header-actions">
+            <div class="toggle-container">
+                <button [class.active]="viewMode() === 'ADD'" (click)="setViewMode('ADD')">Añadir</button>
+                <button [class.active]="viewMode() === 'REMOVE'" (click)="setViewMode('REMOVE')">Eliminar</button>
+            </div>
+            <h3 style="margin-top: 10px;">{{ viewMode() === 'ADD' ? 'Añadir Participante' : 'Eliminar Participante' }}
+            </h3>
+        </div>
+
+        <div class="contact-list-container">
+            <h4>{{ viewMode() === 'ADD' ? 'Seleccionar Contacto' : 'Seleccionar Miembro' }}</h4>
+            @if (contacts().length === 0) {
+            <p class="no-contacts">
+                {{ viewMode() === 'ADD' ? 'No tienes contactos disponibles.' : 'No se encontraron participantes.' }}
+            </p>
+            }
+            <div class="contact-list">
+                @for (contact of contacts(); track contact.correo) {
+                <div class="contact-item" (click)="selectContact(contact.correo)"
+                    [class.selected]="selectedContactEmail() === contact.correo">
+                    <input type="radio" [checked]="selectedContactEmail() === contact.correo" name="selectedContact"
+                        (click)="$event.stopPropagation(); selectContact(contact.correo)">
+                    <img [src]="contact | avatarUrl" alt="Avatar" class="avatar-small">
+                    <span class="contact-name">{{ contact.nombreAppUsuario || contact.nombreUsuario || contact.correo
+                        }}</span>
+                </div>
+                }
+            </div>
+        </div>
+
+        <p *ngIf="errorMessage()" class="error-msg">{{ errorMessage() }}</p>
+
+        <div class="modal-actions">
+            <button class="btn-secondary" (click)="onClose()" [disabled]="isSaving()">Cancelar</button>
+
+            <button *ngIf="viewMode() === 'ADD'" class="btn-primary" (click)="onConfirm()"
+                [disabled]="!selectedContactEmail() || isSaving()">
+                {{ isSaving() ? 'Añadiendo...' : 'Añadir' }}
+            </button>
+
+            <button *ngIf="viewMode() === 'REMOVE'" class="btn-danger" (click)="onConfirm()"
+                [disabled]="!selectedContactEmail() || isSaving()">
+                {{ isSaving() ? 'Eliminando...' : 'Eliminar' }}
+            </button>
+        </div>
+    </div>
+</div>

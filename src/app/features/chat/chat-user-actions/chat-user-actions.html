@@ -1,0 +1,38 @@
+<div class="chat-actions-container">
+    <button class="icon-button" (click)="toggleMenu()">
+        <span class="material-icons">more_vert</span>
+    </button>
+
+    @if (isMenuOpen()) {
+    <!-- Global overlay to handle click outside -->
+    <div class="menu-overlay" (click)="closeMenu()"></div>
+
+    <div class="dropdown-menu">
+        @if (chatType() === 'GRUPO') {
+        <button class="menu-item" (click)="openEditGroup()">
+            <span class="material-icons">edit</span>
+            <span>Editar grupo</span>
+        </button>
+        <button class="menu-item" (click)="openAddParticipant()">
+            <span class="material-icons">manage_accounts</span>
+            <span>Administrar participantes</span>
+        </button>
+        } @else {
+        <div class="menu-item disabled">
+            <span>Opciones de contacto</span>
+        </div>
+        }
+    </div>
+    }
+</div>
+
+@if (isEditGroupOpen()) {
+<app-edit-group-modal [chatId]="chatId()" [currentName]="chatName()" (close)="closeEditGroup()"
+    (chatUpdated)="onChatUpdated()">
+</app-edit-group-modal>
+}
+
+@if (isAddParticipantOpen()) {
+<app-add-participant-modal [chatId]="chatId()" (close)="closeAddParticipant()" (participantAdded)="onChatUpdated()">
+</app-add-participant-modal>
+}

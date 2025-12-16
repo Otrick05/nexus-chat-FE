@@ -1,15 +1,26 @@
 <header class="header">
-  <div class="header-info">
-    <h2 class="header-title">Global header</h2>
-    <p class="header-subtitle">23 members, 5 online</p>
+  <div class="header-start"> <!-- Wrapper for Avatar + Info -->
+    <img class="header-avatar" [src]="activeChat() | avatarUrl" alt="avatar" *ngIf="activeChat()">
+    <div class="header-info">
+      <h2 class="header-title">{{ activeChat()?.nombre || 'Nexus Chat' }}</h2>
+
+      <!-- Group Info -->
+      <p class="header-subtitle" *ngIf="activeChat()?.tipo === 'GRUPO'">
+        {{ activeChat()?.participantes?.length || 0 }} participants
+      </p>
+
+      <!-- Private Chat Info (Contact) -->
+      <p class="header-subtitle" *ngIf="activeChat()?.tipo === 'PRIVADO'">
+        {{ activeChat()?.contactEmail || 'Private Chat' }}
+      </p>
+
+      <p class="header-subtitle" *ngIf="!activeChat()">Select a chat to start messaging</p>
+    </div>
   </div>
   <div class="header-actions">
-    <button class="icon-button">
-      <span class="material-icons">search</span>
-    </button>
-    <button class="icon-button">
-      <span class="material-icons">more_vert</span>
-    </button>
+    <app-chat-user-actions *ngIf="activeChat()" [chatId]="activeChat()!.id" [chatType]="activeChat()!.tipo!"
+      [chatName]="activeChat()!.nombre">
+    </app-chat-user-actions>
     <button (click)="toggleTheme()" class="icon-button theme-toggle">
       <span class="material-icons">{{ isDark ? 'light_mode' : 'dark_mode' }}</span>
 

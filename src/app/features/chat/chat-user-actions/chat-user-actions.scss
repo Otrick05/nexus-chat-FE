@@ -1,0 +1,119 @@
+.chat-actions-container {
+    position: relative;
+    display: inline-block;
+}
+
+.icon-button {
+    background: none;
+    border: none;
+    color: var(--text-secondary-light);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+        color: var(--text-light);
+    }
+
+    .dark & {
+        color: var(--text-secondary-dark);
+
+        &:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-dark);
+        }
+    }
+}
+
+.menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 99;
+    cursor: default;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 200px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 100;
+    overflow: hidden;
+    padding: 8px 0;
+    animation: fadeIn 0.1s ease-out;
+    border: 1px solid var(--border-light);
+
+    .dark & {
+        background: var(--surface-dark);
+        border-color: var(--border-dark);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    }
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 16px;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: var(--text-light);
+    transition: background-color 0.2s;
+
+    .dark & {
+        color: var(--text-dark);
+    }
+
+    &:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+
+        .dark & {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+    }
+
+    &.disabled {
+        opacity: 0.5;
+        cursor: default;
+
+        &:hover {
+            background: none;
+        }
+    }
+
+    .material-icons {
+        font-size: 20px;
+        color: var(--text-secondary-light);
+
+        .dark & {
+            color: var(--text-secondary-dark);
+        }
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

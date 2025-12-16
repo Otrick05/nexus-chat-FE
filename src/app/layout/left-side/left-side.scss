@@ -575,3 +575,89 @@
     transform: scale(1);
   }
 }
+
+/* Botón flotante o de cabecera para agregar contacto */
+.btn-icon-primary {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background: var(--primary-dark);
+  }
+
+  .material-icons {
+    font-size: 1.25rem;
+  }
+}
+
+// Settings List Styles
+.settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: rgba(255, 0, 0, 0.03);
+  border: 1px solid transparent;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateX(2px);
+    border-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .material-icons {
+    color: #ae8bfa; // Slightly lighter accent for setting icons
+    font-size: 20px;
+  }
+
+  .settings-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .settings-label {
+    font-size: 0.95rem;
+    color: #888888;
+    font-weight: 500;
+  }
+
+  .settings-desc {
+    font-size: 0.8rem;
+    color: #94a3b8;
+  }
+}
+
+.settings-placeholder-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  text-align: center;
+  color: #64748b;
+  gap: 10px;
+
+  .material-icons {
+    font-size: 32px;
+    opacity: 0.5;
+  }
+}
