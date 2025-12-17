@@ -2,6 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, switchMap, map } from 'rxjs';
 
+import { environment } from '../../../environments/environment';
+
 export interface SignedUrlResponse {
     uploadUrl: string;
     publicUrl: string;
@@ -14,7 +16,7 @@ export class UploadService {
 
     private http = inject(HttpClient);
     // Adjust base URL as needed
-    private readonly API_URL = 'http://localhost:8080/api';
+    private readonly API_URL = environment.apiUrl;
 
     /**
      * 1. Request Signed URL from Backend
@@ -62,6 +64,7 @@ export class UploadService {
             fileName: file.name,
             contentType: file.type
         };
+        console.log('UploadService: Requesting signed URL with payload:', payload);
 
         return this.http.post<SignedUrlResponse>(signEndpoint, payload).pipe(
             switchMap(response => {

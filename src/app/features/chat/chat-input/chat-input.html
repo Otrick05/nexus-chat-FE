@@ -1,9 +1,49 @@
 <div class="input-container">
+  @if (!isRecording && !isReviewing) {
   <input #fileInput type="file" (change)="onFileSelected($event)" style="display: none">
   <button (click)="fileInput.click()"><span class="material-icons">add_circle_outline</span></button>
   <input type="text" [(ngModel)]="messageText" (keyup.enter)="sendMessage()" placeholder="Type a message...">
   <button><span class="material-icons">sentiment_satisfied_alt</span></button>
+
+  @if (messageText.trim()) {
   <button class="send-btn" (click)="sendMessage()">
     <span class="material-icons">send</span>
   </button>
+  } @else {
+  <button class="mic-btn" (click)="startRecording()">
+    <span class="material-icons">mic</span>
+  </button>
+  }
+  }
+
+  @if (isRecording) {
+  <div class="recording-ui">
+    <div class="timer-container">
+      <span class="recording-dot"></span>
+      <span class="timer-text">{{ recordingTime }}</span>
+    </div>
+    <div class="recording-actions">
+      <button class="cancel-btn" (click)="cancelRecording()">
+        <span class="material-icons">close</span>
+      </button>
+      <button class="confirm-btn" (click)="stopAndReview()">
+        <span class="material-icons">stop</span>
+      </button>
+    </div>
+  </div>
+  }
+
+  @if (isReviewing) {
+  <div class="review-ui">
+    <button class="trash-btn" (click)="cancelReview()">
+      <span class="material-icons">delete</span>
+    </button>
+
+    <audio [src]="audioPreviewUrl" controls class="audio-preview"></audio>
+
+    <button class="confirm-send-btn" (click)="confirmSend()">
+      <span class="material-icons">send</span>
+    </button>
+  </div>
+  }
 </div>

@@ -5,12 +5,14 @@ import { Contacto } from '../models/contacto.models';
 
 
 
+import { environment } from '../../../environments/environment';
+
 @Injectable({
     providedIn: 'root'
 })
 export class ContactService {
     private http = inject(HttpClient);
-    private readonly API_URL = 'http://localhost:8080/api/contactos';
+    private readonly API_URL = `${environment.apiUrl}/contactos`;
 
     getContacts(): Observable<Contacto[]> {
         return this.http.get<Contacto[]>(`${this.API_URL}`).pipe(

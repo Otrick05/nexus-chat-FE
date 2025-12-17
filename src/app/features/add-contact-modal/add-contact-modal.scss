@@ -153,13 +153,18 @@
         }
     }
 
-    .btn-primary {
+    .btn-secondary {
         background: var(--primary);
         color: white;
 
+        &:hover {
+            background: rgba(212, 179, 255, 0.651);
+
+        }
+
     }
 
-    .btn-secondary {
+    .btn-primary {
         background: rgba(212, 179, 255, 0.651);
         color: white;
         border: 1px solid #ffff;

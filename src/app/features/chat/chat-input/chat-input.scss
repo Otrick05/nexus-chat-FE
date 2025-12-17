@@ -10,6 +10,8 @@
   background-color: var(--bg-app);
   border-radius: 0.5rem;
   padding: 0.5rem;
+  min-height: 50px;
+  /* Ensure consistent height */
 
   input {
     flex: 1;
@@ -20,7 +22,9 @@
     color: var(--text-main);
     font-family: inherit;
 
-    &::placeholder { color: var(--text-secondary); }
+    &::placeholder {
+      color: var(--text-secondary);
+    }
   }
 
   button {
@@ -32,14 +36,98 @@
     display: flex;
     align-items: center;
 
-    &:hover { color: var(--primary); }
+    &:hover {
+      color: var(--primary);
+    }
 
-    &.send-btn {
+    &.send-btn,
+    &.mic-btn,
+    &.confirm-btn,
+    &.confirm-send-btn {
       background-color: var(--primary);
       color: white;
       border-radius: 0.375rem;
       margin-left: 0.5rem;
-      &:hover { opacity: 0.9; }
+
+      &:hover {
+        opacity: 0.9;
+      }
     }
+
+    &.cancel-btn,
+    &.trash-btn {
+      color: #ef4444; // Red
+
+      &:hover {
+        background-color: rgba(239, 68, 68, 0.1);
+        border-radius: 50%;
+      }
+    }
+  }
+}
+
+.recording-ui {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.5rem;
+
+  .timer-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    .timer-text {
+      font-family: monospace;
+      font-size: 1rem;
+      color: var(--text-main);
+    }
+
+    .recording-dot {
+      width: 10px;
+      height: 10px;
+      background-color: #ef4444;
+      border-radius: 50%;
+      animation: blink 1.5s infinite;
+    }
+  }
+
+  .recording-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+.review-ui {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+
+  .audio-preview {
+    flex: 1;
+    height: 32px;
+
+    // Basic styling for webkit browsers
+    &::-webkit-media-controls-panel {
+      background-color: var(--bg-surface);
+    }
+  }
+}
+
+@keyframes blink {
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+
+  100% {
+    opacity: 1;
   }
 }

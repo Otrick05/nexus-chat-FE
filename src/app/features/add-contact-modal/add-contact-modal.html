@@ -30,8 +30,8 @@
         <!-- Actions -->
         <div class="modal-actions">
             @if (foundContact()) {
-            <button class="btn-secondary" (click)="onClear()">Buscar otro</button>
             <button class="btn-primary" (click)="onAdd()">Agregar</button>
+            <button class="btn-secondary" (click)="onClear()">Buscar otro</button>
             } @else {
             <button class="btn-secondary" (click)="onClose()">Salir</button>
             }

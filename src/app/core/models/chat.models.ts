@@ -32,12 +32,23 @@ export interface Chat {
     contactEmail?: string;
 }
 
+// DTO anidado para el resumen del mensaje
 export interface MensajeResumenDTO {
     contenido: string;
-    correoRemitente: string;
-    tipo: TipoMensaje;
+    nombreRemitente: string;
+    remitenteCorreo: string;
     hora: string; // ISO string
     borradoParaTodos: boolean;
+    // tipo: TipoMensaje; // Removed as it wasn't in the user's DTO, but check if needed logic relies on it. 
+    // User's DTO didn't show 'tipo' in MensajeResumenDTO.
+}
+
+export interface ParticipanteDTO {
+    idUsuario: number;
+    correo: string;
+    nombreUsuario: string;
+    avatarUrl: string;
+    rol: string;
 }
 
 export interface ChatListResponseDTO {
@@ -47,6 +58,7 @@ export interface ChatListResponseDTO {
     urlAvatar: string;
     ultimoMensaje?: MensajeResumenDTO;
     conteoNoLeidos: number;
+    participantes: ParticipanteDTO[];
 }
 
 export interface CreateChatRequest {
@@ -84,4 +96,31 @@ export interface PaginatedMessageResponse {
     number: number;
     numberOfElements: number;
     empty: boolean;
+}
+
+export enum ChatEventType {
+    MESSAGE_READ = 'MESSAGE_READ',
+    USER_JOINED = 'USER_JOINED',
+    USER_LEFT = 'USER_LEFT',
+    OWNER_CHANGED = 'OWNER_CHANGED',
+    CHAT_UPDATED = 'CHAT_UPDATED',
+    NEW_CHAT = 'NEW_CHAT',
+    TYPING = 'TYPING',
+    NEW_MESSAGE_NOTIFICATION = 'NEW_MESSAGE_NOTIFICATION'
+}
+
+export interface ChatEventDTO {
+    type: ChatEventType;
+    payload: any; // Typed based on event in service
+}
+
+export interface MensajeNotificationDTO {
+    id: number;
+    chatId: number;
+    contenido: string;
+    tipoMensaje: TipoMensaje;
+    hora: string;
+    remitenteEmail: string;
+    remitenteNombre: string;
+    remitenteAvatar?: string; // Optional/Guessing based on pattern, user JSON didn't show it but good to have
 }

@@ -155,32 +155,38 @@ export class ChatStateService {
     }
 
     /**
+     * Updates or Inserts a chat into the list.
+     * Used for NEW_CHAT or CHAT_UPDATED events.
+     */
+    upsertChat(chat: Chat) {
+        console.log('ChatState: upsertChat called', chat); // DEBUG LOG
+        this.chatsMap.update((current) => {
+            const newMap = new Map(current);
+            newMap.set(chat.id, chat);
+            console.log('ChatState: chatsMap updated via upsertChat. Size:', newMap.size); // DEBUG LOG
+            return newMap;
+        });
+    }
+
+    /**
      * Handles an incoming message from the global WebSocket subscription.
      * 1. Upserts the message if we have loaded messages for that chat (or if it's active).
      * 2. Updates the Chat List item (last message, unread count) regardless.
      */
     handleIncomingMessage(message: mensaje, currentAppUserEmail: string | undefined) {
+        console.log('ChatState: handleIncomingMessage called', message); // DEBUG LOG
         // 1. Update the chat in the list (Sidebar)
         this.chatsMap.update((current) => {
             const chat = current.get(message.chatId);
             let newChat: Chat;
 
             if (!chat) {
-                // Chat doesn't exist (New Chat or Group)
-                // We create a stub. Since we might miss details (like Group Name), we do our best.
-                // LIFO: This new entry will be naturally at the end/top if we sort by last message.
-                // Our 'chats' computed property currently just takes values(). 
-                // Ideally, the consuming component sorts them, or we sort here?
-                // The 'chats' computed signals usually don't guarantee order unless we sort.
-                // But Maps preserve insertion order? No. 
-                // We'll insert it. The Sidebar usually sorts by timestamp.
+                // Chat doesn't exist. Ideally a NEW_CHAT event should have handled this.
+                // But as fallback, create a stub.
                 newChat = {
                     id: message.chatId,
-                    // Use sender name as chat name fallback (works for DM). For group, might be partial.
-                    nombre: message.remitenteNombre || 'Nuevo Chat',
-                    tipo: 'PRIVADO', // We guess default, but maybe payload has info if we expanded DTO. 
-                    // But for now, safe default or check if multiple participants?
-                    // Actually, if it's a notification, we assume it's a valid chat.
+                    nombre: message.remitenteNombre || 'Chat',
+                    tipo: 'PRIVADO',
                     avatarUrl: message.remitenteAvatar || '',
                     participantes: [],
                     conteoNoLeidos: 0
@@ -193,24 +199,29 @@ export class ChatStateService {
 
             // Increment unread if:
             // - The message sender is NOT the current user
-            // - AND (The chat is NOT active OR the window is not focused - simplified to just 'not active' for now)
+            // - AND The chat is NOT active
             const isActive = this.activeChatId() === message.chatId;
             const isMe = message.correoRemitente === currentAppUserEmail;
 
+            // Debug log
+            // console.log(`Msg from ${message.correoRemitente}, Active: ${this.activeChatId()}, isMe: ${isMe}, isActive: ${isActive}`);
+
             if (!isMe && !isActive) {
                 newChat.conteoNoLeidos = (newChat.conteoNoLeidos || 0) + 1;
+            } else if (isActive) {
+                // If active, ensure unread is 0 (just in case)
+                newChat.conteoNoLeidos = 0;
             }
 
             const newMap = new Map(current);
-            // Delete and re-set to ensure it's "newest" in iteration order if component relies on that?
-            // Or just set. Most reliable sort is to sort the array in the computed signal.
+            // Delete and re-set to force change detection if relies on map order (though computed usually handles this)
+            newMap.delete(message.chatId);
             newMap.set(message.chatId, newChat);
             return newMap;
         });
 
         // 2. Upsert into messages map if applicable
         // We always upsert. If the map entry doesn't exist (chat never opened), upsertMessage handles it by creating a list [message].
-        // This is fine, effectively caching it.
         this.upsertMessage(message);
     }
 }

@@ -165,7 +165,7 @@ export class AuthService {
    */
   updatePassword(current: string, newPass: string): Observable<boolean> {
     // Placeholder endpoint
-    return this.http.put<any>(`${this.API_URL}/auth/actualizar-password`, {
+    return this.http.put<any>(`${this.API_URL}/auth/changepassword`, {
       currentPassword: current,
       newPassword: newPass
     }).pipe(
@@ -176,7 +176,11 @@ export class AuthService {
           this.handleAuthSuccess(token); // Update JWT and user state
         }
       }),
-      map(() => true)
+      map(() => true),
+      catchError((error) => {
+        console.error('Error updating password:', error);
+        return of(false);
+      })
     );
   }
 }

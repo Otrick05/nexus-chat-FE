@@ -1,7 +1,7 @@
 import { Injectable, inject, effect } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, Subscription, retry, tap, map } from 'rxjs';
-import { Chat, ChatListResponseDTO, mensaje, CreateChatRequest, TipoMensaje, PaginatedMessageResponse } from '../models/chat.models';
+import { Chat, ChatListResponseDTO, mensaje, CreateChatRequest, TipoMensaje, PaginatedMessageResponse, ChatEventDTO, ChatEventType, MensajeDTO, MensajeNotificationDTO } from '../models/chat.models';
 import { Contacto } from '../models/contacto.models';
 import { ChatStateService } from './chat.state';
 import { WebSocketService } from './websocket.service';
@@ -59,10 +59,11 @@ export class ChatService {
                     ultimoMensaje: dto.ultimoMensaje ? {
                         id: 0, // summary doesn't have ID
                         chatId: dto.idChat,
-                        correoRemitente: dto.ultimoMensaje.correoRemitente,
+                        correoRemitente: dto.ultimoMensaje.remitenteCorreo,
                         contenido: dto.ultimoMensaje.contenido,
-                        tipoMensaje: dto.ultimoMensaje.tipo,
+                        tipoMensaje: TipoMensaje.TEXT, // Default for summary
                         timestamp: dto.ultimoMensaje.hora,
+                        remitenteNombre: dto.ultimoMensaje.nombreRemitente,
                         isRead: true // summary doesn't say
                     } : undefined
                 }));
@@ -251,16 +252,72 @@ export class ChatService {
         // Subscribe to user-specific queue for real-time updates (global)
         this.globalMessagesSub = this.ws.watch('/user/queue/notificaciones').subscribe({
             next: (messageFrame) => {
+                console.log('WS Notification Frame:', messageFrame.body); // DEBUG LOG
                 try {
-                    const msg: mensaje = JSON.parse(messageFrame.body);
-                    // Handle via state service
-                    this.state.handleIncomingMessage(msg, this.auth.currentUser()?.correo);
+                    const event: ChatEventDTO = JSON.parse(messageFrame.body);
+                    console.log('WS Parsed Event:', event); // DEBUG LOG
+                    const currentUserEmail = this.auth.currentUser()?.correo;
+
+                    switch (event.type) {
+                        case ChatEventType.NEW_MESSAGE_NOTIFICATION:
+                            // Payload is MensajeNotificationDTO based on recent logs
+                            const msgDTO: MensajeNotificationDTO = event.payload;
+
+                            const msg: mensaje = {
+                                id: msgDTO.id,
+                                chatId: msgDTO.chatId,
+                                correoRemitente: msgDTO.remitenteEmail, // Mapped from flat DTO
+                                contenido: msgDTO.contenido,
+                                tipoMensaje: msgDTO.tipoMensaje,
+                                timestamp: msgDTO.hora,
+                                remitenteNombre: msgDTO.remitenteNombre, // Mapped from flat DTO
+                                remitenteAvatar: msgDTO.remitenteAvatar,
+                                isRead: false
+                            };
+                            console.log('Handling Incoming Message:', msg); // DEBUG LOG
+                            this.state.handleIncomingMessage(msg, currentUserEmail);
+                            break;
+
+                        case ChatEventType.NEW_CHAT:
+                        case ChatEventType.CHAT_UPDATED:
+                            // Payload is ChatListResponseDTO
+                            const chatDTO: ChatListResponseDTO = event.payload;
+                            console.log('Handling Chat Update/New:', chatDTO); // DEBUG LOG
+                            const chat: Chat = {
+                                id: chatDTO.idChat,
+                                nombre: chatDTO.nombreChat,
+                                tipo: chatDTO.tipo as 'PRIVADO' | 'GRUPO',
+                                avatarUrl: chatDTO.urlAvatar,
+                                participantes: chatDTO.participantes ? chatDTO.participantes.map(p => p.correo) : [],
+                                conteoNoLeidos: chatDTO.conteoNoLeidos,
+                                ultimoMensaje: chatDTO.ultimoMensaje ? {
+                                    id: 0, // Summary has no ID
+                                    chatId: chatDTO.idChat,
+                                    correoRemitente: chatDTO.ultimoMensaje.remitenteCorreo,
+                                    contenido: chatDTO.ultimoMensaje.contenido,
+                                    // Missing 'tipo' in summary DTO, assume TEXT or infer? 
+                                    // For summary display it might not matter much in list view if just showing text 
+                                    // but if using 'tipoMensaje' field...
+                                    tipoMensaje: TipoMensaje.TEXT,
+                                    timestamp: chatDTO.ultimoMensaje.hora,
+                                    remitenteNombre: chatDTO.ultimoMensaje.nombreRemitente,
+                                    isRead: true
+                                } : undefined
+                            };
+                            this.state.upsertChat(chat);
+                            break;
+
+                        default:
+                            console.log('Unhandled Chat Event:', event.type);
+                    }
+
                 } catch (e) {
                     console.error('Error parsing global message', e);
                 }
             },
             error: (err) => console.error('Global WS Error', err)
         });
+        console.log('ChatService: Subscribed to /user/queue/notificaciones'); // DEBUG LOG
     }
 
     private unsubscribeGlobalMessages() {
