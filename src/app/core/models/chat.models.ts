@@ -1,6 +1,6 @@
 export enum TipoMensaje {
     TEXT = 'TEXTO',
-    IMAGE = 'IMAGEN',
+    IMAGE = 'FOTO',
     VIDEO = 'VIDEO',
     AUDIO = 'AUDIO',
     FILE = 'ARCHIVO'
@@ -47,6 +47,7 @@ export interface ParticipanteDTO {
     idUsuario: number;
     correo: string;
     nombreUsuario: string;
+    nombreAppUsuario?: string;
     avatarUrl: string;
     rol: string;
 }
@@ -66,7 +67,15 @@ export interface CreateChatRequest {
     nombreChat?: string;
     tipo: 'PRIVADO' | 'GRUPO';
     mensajeInicial?: string;
-    tipoMensaje?: 'TEXTO' | 'ARCHIVO' | 'IMAGEN';
+    tipoMensaje?: TipoMensaje;
+}
+
+export interface ArchivoDTO {
+    id?: string;
+    url: string;
+    urlStorage?: string; // Correct field from backend
+    nombreArchivo: string;
+    contentType: string;
 }
 
 export interface MensajeDTO {
@@ -82,7 +91,7 @@ export interface MensajeDTO {
         nombreUsuario: string;
         avatarUrl?: string; // might be null
     };
-    multimedia: any[]; // define stricter if needed
+    multimedia: ArchivoDTO[];
 }
 
 export interface PaginatedMessageResponse {
@@ -117,10 +126,28 @@ export interface ChatEventDTO {
 export interface MensajeNotificationDTO {
     id: number;
     chatId: number;
+    // Contenido can be empty for media, so we look at multimedia
     contenido: string;
     tipoMensaje: TipoMensaje;
     hora: string;
     remitenteEmail: string;
     remitenteNombre: string;
-    remitenteAvatar?: string; // Optional/Guessing based on pattern, user JSON didn't show it but good to have
+    remitenteAvatar?: string;
+    multimedia?: ArchivoDTO[];
+}
+
+export interface ArchivoSolicitudDTO {
+    nombreArchivo: string; // Original filename, e.g. "image.png"
+    contentType: string;
+    tamanoBytes: number;
+    duracion?: string;
+    fileName?: string; // The GCS object name/URL
+}
+
+export interface EnviarMensajeRequestDTO {
+    chatId: number;
+    contenido?: string; // Optional for media messages
+    correoRemitente?: string;
+    tipoMensaje: TipoMensaje;
+    archivos?: ArchivoSolicitudDTO[];
 }

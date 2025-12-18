@@ -1,12 +1,12 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, switchMap, map } from 'rxjs';
-
+import { HttpClient, HttpBackend } from '@angular/common/http';
+import { Observable, switchMap, map, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface SignedUrlResponse {
-    uploadUrl: string;
-    publicUrl: string;
+    fileName: string;
+    signedUrl: string;
+    contentType: string;
 }
 
 @Injectable({
@@ -15,6 +15,9 @@ export interface SignedUrlResponse {
 export class UploadService {
 
     private http = inject(HttpClient);
+    private httpBackend = inject(HttpBackend);
+    private anonymousHttp = new HttpClient(this.httpBackend);
+
     // Adjust base URL as needed
     private readonly API_URL = environment.apiUrl;
 
@@ -24,41 +27,11 @@ export class UploadService {
      * 3. Return the Public URL
      */
     uploadFile(file: File): Observable<string> {
-        // 1. Get Signed URL
-        const signEndpoint = `${this.API_URL}/files/signed-url`;
-        const payload = {
-            fileName: file.name,
-            contentType: file.type
-        };
-
-        return this.http.post<SignedUrlResponse>(signEndpoint, payload).pipe(
-            switchMap(response => {
-                // 2. Upload to GCP
-                // Important: Content-Type header must match what was signed
-                return this.http.put(response.uploadUrl, file, {
-                    headers: { 'Content-Type': file.type },
-                    reportProgress: true,
-                    observe: 'events' // If we want progress events later
-                }).pipe(
-                    // When upload completes, return the public URL
-                    map(() => response.publicUrl)
-                );
-            }),
-            // For this simple version, we filter events and just return string on completion
-            // In a real app with progress bar, we'd handle events differently or return an object
-            // For now, let's simplify to just return the URL when done.
-            // But 'put' with 'observe: events' returns HttpEvents. 
-            // To simplify for the chat integration, let's stick to simple promise-like observable for now.
-            map(event => {
-                // If we used observe: 'events', we need to filter for HttpResponse
-                // But to keep it simple for the user first:
-                return ''; // Placeholder, fixing below
-            })
-        );
+        return this.uploadFileSimple(file).pipe(map(res => res.publicUrl));
     }
 
     // Simplified version without progress events for easier integration first
-    uploadFileSimple(file: File): Observable<string> {
+    uploadFileSimple(file: File): Observable<{ publicUrl: string, storageFileName: string }> {
         const signEndpoint = `${this.API_URL}/files/signed-url`;
         const payload = {
             fileName: file.name,
@@ -66,12 +39,30 @@ export class UploadService {
         };
         console.log('UploadService: Requesting signed URL with payload:', payload);
 
-        return this.http.post<SignedUrlResponse>(signEndpoint, payload).pipe(
+        return this.http.post<any>(signEndpoint, payload).pipe(
+            tap(res => console.log('DEBUG: Signed URL Response:', res)),
             switchMap(response => {
-                return this.http.put(response.uploadUrl, file, {
+                // Handle both single object and array response
+                const data = Array.isArray(response) ? response[0] : response;
+
+                // Map fields from verified backend DTO: fileName, signedUrl, contentType
+                const uploadUrl = data.signedUrl;
+                const storageFileName = data.fileName; // The UUID prefixed name
+
+                if (!uploadUrl) {
+                    console.error('ERROR: signedUrl is missing in response!', response);
+                    throw new Error('signedUrl is missing');
+                }
+
+                // EXTRACT Public URL: Remove query parameters from the signed URL
+                const publicUrl = uploadUrl.split('?')[0];
+
+                // Use anonymousHttp to bypass interceptors for the external GCS URL
+                return this.anonymousHttp.put(uploadUrl, file, {
                     headers: { 'Content-Type': file.type }
                 }).pipe(
-                    map(() => response.publicUrl)
+                    tap(response => console.log('DEBUG: Response from GCS Bucket:', response)),
+                    map(() => ({ publicUrl, storageFileName }))
                 );
             })
         );

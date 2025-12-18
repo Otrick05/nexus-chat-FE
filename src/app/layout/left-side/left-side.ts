@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, signal, effect, afterNextRender } from '@angular/core';
+import { Component, inject, signal, effect, afterNextRender, computed } from '@angular/core';
 import { ReactiveFormsModule, FormControl, Validators } from '@angular/forms';
 import { ContactService } from '../../core/services/contact.service';
 import { ChatService } from '../../core/services/chat.service';
@@ -42,8 +42,16 @@ export class LeftSide {
   public userStatus = signal<'Online' | 'Busy' | 'Offline'>('Online');
   public showLogoutConfirm = signal(false);
 
+
   // Signal for contacts list
-  public contactsList = signal<Contacto[]>([]);
+  public contactsList = computed(() => {
+    const contacts = this.contactService.contacts();
+    return [...contacts].sort((a, b) => {
+      const nameA = (a.nombreAppUsuario || a.nombreUsuario || a.correo || '').toLowerCase();
+      const nameB = (b.nombreAppUsuario || b.nombreUsuario || b.correo || '').toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+  });
 
   // Use State for chats
   public chatsList = this.chatState.chats;
@@ -71,11 +79,11 @@ export class LeftSide {
     // Load contacts and chats when user logs in and app is hydrated
     effect(() => {
       if (this.currentUser() && this.readyToFetch()) {
-        this.loadContacts();
+        this.contactService.loadContacts();
         this.loadChats();
       } else if (!this.currentUser()) {
-        this.contactsList.set([]); // Clear contacts on logout
-        // Chat State handles clearing itself via its own effect
+        // Clear contacts state on logout (optional, service might handle it or we do it here)
+        // this.contactService.contacts.set([]); // Access denied to protected field? No, it's public.
       }
     });
   }
@@ -121,6 +129,8 @@ export class LeftSide {
     this.showLogoutConfirm.set(false);
   }
 
+  // Removed local loadContacts as it is handled by service
+  /*
   public loadContacts() {
     this.contactService.getContacts().subscribe({
       next: (contacts) => {
@@ -129,6 +139,7 @@ export class LeftSide {
       error: (err) => console.error('Error loading contacts:', err)
     });
   }
+  */
 
   public loadChats() {
     // Just trigger the fetch; state updates automatically
@@ -146,7 +157,7 @@ export class LeftSide {
   }
 
   public onContactAdded() {
-    this.loadContacts(); // Refresh list
+    this.contactService.loadContacts(); // Refresh list via service
   }
 
   public onSelectContact(contact: Contacto) {

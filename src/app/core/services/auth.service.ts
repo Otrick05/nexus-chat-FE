@@ -1,7 +1,7 @@
 import { JwtPayload } from './../models/jwt-payload.models';
 import { Injectable, signal, PLATFORM_ID, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap, of, catchError, map, retry } from 'rxjs';
+import { Observable, tap, of, catchError, map, retry, switchMap, filter } from 'rxjs';
 import { Usuario } from '../models/usuario.models';
 import { LoginRequest } from '../models/login-request.models';
 import { SignupRequest } from '../models/signup-request.model';
@@ -16,6 +16,7 @@ export class AuthService {
   public currentUser = signal<Usuario | null>(null);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly API_URL = environment.apiUrl;
+  private tokenTimer: any;
 
   constructor(private http: HttpClient) {
     this.checkInitialAuth();
@@ -43,6 +44,7 @@ export class AuthService {
         next: (user) => {
           if (user) {
             this.currentUser.set(user);
+            this.scheduleTokenExpiration(jwt);
           } else {
             this.logout();
           }
@@ -65,6 +67,7 @@ export class AuthService {
   private handleAuthSuccess(token: string): void {
     if (isPlatformBrowser(this.platformId)) {
       localStorage.setItem('jwt', token);
+      this.scheduleTokenExpiration(token);
     }
 
     console.log('Token recibido:', token);
@@ -120,15 +123,47 @@ export class AuthService {
   }
 
   logout() {
+    if (this.tokenTimer) {
+      clearTimeout(this.tokenTimer);
+    }
     if (isPlatformBrowser(this.platformId)) {
       localStorage.removeItem('jwt');
     }
     this.currentUser.set(null);
   }
 
+  private scheduleTokenExpiration(token: string) {
+    const payload = this.decodeJwt(token);
+    const expiresAt = payload.exp * 1000;
+    const timeout = expiresAt - Date.now();
+    console.log(`Token expiration scheduled. Expires at: ${new Date(expiresAt).toISOString()}, TTL (ms): ${timeout}`);
+
+    if (this.tokenTimer) {
+      clearTimeout(this.tokenTimer);
+    }
+
+    if (timeout > 0) {
+      this.tokenTimer = setTimeout(() => {
+        this.handleSessionExpired();
+      }, timeout);
+    } else {
+      this.handleSessionExpired();
+    }
+  }
+
+  handleSessionExpired() {
+    this.logout();
+    if (isPlatformBrowser(this.platformId)) {
+      alert('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+      window.location.reload();
+    }
+  }
+
   private decodeJwt(token: string): JwtPayload {
     try {
-      return JSON.parse(atob(token.split('.')[1]));
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      // console.log('Decoded JWT:', payload); // Be careful logging full payload in prod, but ok for debug
+      return payload;
     } catch (e) {
       console.error('Failed to decode JWT', e);
       throw e;
@@ -144,17 +179,21 @@ export class AuthService {
   /**
    * Updates the display name (nombreAppUsuario).
    */
-  updateDisplayName(newName: string): Observable<Usuario> {
-    // Placeholder endpoint
-    return this.http.put<any>(`${this.API_URL}/perfil-usuario/actualizar-nombre`, {
+  updateDisplayName(newName: string): Observable<boolean> {
+    const currentUser = this.currentUser();
+    if (!currentUser) {
+      return of(false);
+    }
+    return this.http.patch<any>(`${this.API_URL}/perfil-usuario/actualizar-nombre`, {
       nombreAppUsuario: newName
     }).pipe(
-      tap(response => {
-        // Assuming backend returns the updated user or we update it locally
-        const currentUser = this.currentUser();
-        if (currentUser) {
-          this.currentUser.set({ ...currentUser, nombreAppUsuario: newName });
-        }
+      map(() => {
+        this.currentUser.update(user => user ? { ...user, nombreAppUsuario: newName } : null);
+        return true;
+      }),
+      catchError((error) => {
+        console.error('Error updating display name:', error);
+        return of(false); // Return false on error but don't log out
       })
     );
   }

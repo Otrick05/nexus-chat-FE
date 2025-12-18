@@ -15,6 +15,7 @@
 
   &.outgoing {
     justify-content: flex-end;
+
     .bubble {
       background-color: var(--primary);
       color: #FFF;
@@ -23,9 +24,18 @@
       border-bottom-left-radius: 0.5rem;
       border-bottom-right-radius: 0;
 
-      .sender { color: #e0e7ff; } // Color claro para sender en outgoing
-      .time { color: #c7d2fe; }
-      p { color: #FFF; }
+      .sender {
+        color: #e0e7ff;
+      }
+
+      // Color claro para sender en outgoing
+      .time {
+        color: #c7d2fe;
+      }
+
+      p {
+        color: #FFF;
+      }
     }
   }
 
@@ -37,20 +47,111 @@
       border-bottom-right-radius: 0.5rem;
       border-bottom-left-radius: 0.5rem;
 
-      .sender { color: var(--primary); }
-      .time { color: var(--text-secondary); }
-      p { color: var(--text-main); }
+      .sender {
+        color: var(--primary);
+      }
+
+      .time {
+        color: var(--text-secondary);
+      }
+
+      p {
+        color: var(--text-main);
+      }
     }
   }
 }
 
-img.avatar { width: 40px; height: 40px; border-radius: 50%; }
+img.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
 
 .bubble {
   padding: 0.75rem;
   max-width: 500px;
-  box-shadow: 0 3px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 3px 3px rgba(0, 0, 0, 0.1);
 
-  .sender { font-weight: 600; font-size: 0.875rem; margin-bottom: 0.25rem; }
-  .time { font-size: 0.75rem; text-align: right; margin-top: 0.25rem; display: block; }
+  .sender {
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .time {
+    font-size: 0.75rem;
+    text-align: right;
+    margin-top: 0.25rem;
+    display: block;
+  }
+
+  .media-content {
+    max-width: 100%;
+    border-radius: 0.5rem;
+    margin-top: 0.25rem;
+    display: block;
+
+    &.image {
+      cursor: pointer;
+      transition: opacity 0.2s;
+      max-height: 300px;
+      object-fit: cover;
+
+      &:hover {
+        opacity: 0.9;
+      }
+    }
+
+    &.video {
+      max-height: 300px;
+      width: 100%;
+    }
+
+    &.audio {
+      width: 100%;
+      min-width: 250px;
+      margin-top: 0.5rem;
+    }
+  }
+
+  .file-attachment {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.2s;
+    margin-top: 0.25rem;
+
+    .file-icon {
+      font-size: 1.5rem;
+    }
+
+    .file-link {
+      font-size: 0.9rem;
+      text-decoration: underline;
+    }
+  }
+}
+
+// Contextual adjustments
+.message-row.outgoing .bubble .file-attachment {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.2);
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+  }
+}
+
+.message-row.incoming .bubble .file-attachment {
+  color: var(--text-main);
+  background-color: rgba(0, 0, 0, 0.05);
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
 }

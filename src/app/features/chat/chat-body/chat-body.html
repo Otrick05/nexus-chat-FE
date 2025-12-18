@@ -4,7 +4,29 @@
 
   <div class="bubble">
     <p *ngIf="!msg.isOwn" class="sender">{{ msg.sender }}</p>
+
+    @switch (msg.type) {
+    @case (TipoMensaje.IMAGE) {
+    <img [src]="msg.text" class="media-content image" alt="Shared image" loading="lazy"
+      (click)="openMedia(msg.text, 'image')">
+    }
+    @case (TipoMensaje.VIDEO) {
+    <video [src]="msg.text" class="media-content video" controls preload="metadata"></video>
+    }
+    @case (TipoMensaje.AUDIO) {
+    <audio [src]="msg.text" class="media-content audio" controls preload="metadata"></audio>
+    }
+    @case (TipoMensaje.FILE) {
+    <a [href]="msg.text" target="_blank" class="file-attachment">
+      <span class="file-icon">📄</span>
+      <span class="file-link">Download File</span>
+    </a>
+    }
+    @default {
     <p>{{ msg.text }}</p>
+    }
+    }
+
     <span class="time">{{ msg.time }}</span>
   </div>
 

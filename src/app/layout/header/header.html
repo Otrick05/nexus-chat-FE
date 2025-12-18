@@ -15,6 +15,12 @@
       </p>
 
       <p class="header-subtitle" *ngIf="!activeChat()">Select a chat to start messaging</p>
+
+      <!-- Add Contact Banner -->
+      <div class="add-contact-banner" *ngIf="isUnknownContact()">
+        <span>Este usuario no está entre tus contactos, deseas agregarlo?</span>
+        <button (click)="addContact()" class="add-btn">Agregar</button>
+      </div>
     </div>
   </div>
   <div class="header-actions">

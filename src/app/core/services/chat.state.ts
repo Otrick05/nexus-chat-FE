@@ -159,11 +159,42 @@ export class ChatStateService {
      * Used for NEW_CHAT or CHAT_UPDATED events.
      */
     upsertChat(chat: Chat) {
-        console.log('ChatState: upsertChat called', chat); // DEBUG LOG
+        console.log('ChatState: upsertChat called', chat);
+        const currentUserEmail = this.authService.currentUser()?.correo;
+
         this.chatsMap.update((current) => {
+            const isActive = this.activeChatId() === chat.id;
+
+            // Prepare the new state for this chat
+            // We start with the incoming chat object
+            const newChat = { ...chat };
+
+            // Logic for unread count:
+            // If it's the active chat, unread count must be 0.
+            // If it's NOT active:
+            //    - If the incoming chat has a count, we might trust it OR we might need to increment it if we are just receiving a message summary.
+            //    - However, NEW_CHAT usually implies a fresh state from backend. 
+            //    - If the backend sent count=0 but it's a new message for us (not from us), we might want to ensure it shows as unread if we don't have it open.
+            //    - BUT, usually the backend *should* send the correct count. 
+            //    - The user request specifically mentioned "support for notification number".
+            //    - Let's assume if we are not the sender and it's not active, we respect the backend count, 
+            //      but if backend sends 0 and it's a new message event type effectively, maybe we force 1? 
+            //      Actually, in NEW_CHAT payload, 'conteoNoLeidos' is provided. We should probably trust it unless it's 0 and we know it shouldn't be.
+            //      But 'handleIncomingMessage' logic increments. 
+            //      Let's blindly trust backend for NEW_CHAT but ensure if active it is 0.
+
+            if (isActive) {
+                newChat.conteoNoLeidos = 0;
+            } else {
+                // If we are the sender, we shouldn't have unread messages typically, but backend source of truth controls this.
+                // However, for immediate UI feedback if backend lags:
+                if (newChat.ultimoMensaje?.correoRemitente === currentUserEmail) {
+                    newChat.conteoNoLeidos = 0;
+                }
+            }
+
             const newMap = new Map(current);
-            newMap.set(chat.id, chat);
-            console.log('ChatState: chatsMap updated via upsertChat. Size:', newMap.size); // DEBUG LOG
+            newMap.set(chat.id, newChat);
             return newMap;
         });
     }

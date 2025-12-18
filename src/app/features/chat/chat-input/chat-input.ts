@@ -66,14 +66,24 @@ export class ChatInput {
 
     // Upload
     this.uploadService.uploadFileSimple(file).subscribe({
-      next: (publicUrl: string) => {
-        this.chatService.sendMessage(activeChat.id, publicUrl, type).subscribe({
+      next: (res) => {
+        // Construct file details for backend
+        const fileDetails = [{
+          nombreArchivo: file.name,
+          contentType: file.type,
+          tamanoBytes: file.size,
+          fileName: res.storageFileName // Backend UUID filename
+        }];
+
+        this.chatService.sendMessage(activeChat.id, '', type, fileDetails).subscribe({
           error: (err: any) => console.error('Failed to send file message', err)
         });
       },
       error: (err: any) => console.error('Upload failed', err)
     });
   }
+
+  // ... (startRecording, etc unchanged)
 
   async startRecording() {
     try {
@@ -97,6 +107,8 @@ export class ChatInput {
       alert('Could not access microphone.');
     }
   }
+
+  // ... (cancelRecording, stopAndReview, confirmSend, cancelReview, stopRecorderInternal unchanged)
 
   cancelRecording() {
     this.stopRecorderInternal();
@@ -166,8 +178,19 @@ export class ChatInput {
     console.log('ChatInput: Initiating upload for file:', file.name, 'Type:', file.type, 'Size:', file.size);
 
     this.uploadService.uploadFileSimple(file).subscribe({
-      next: (publicUrl: string) => {
-        this.chatService.sendMessage(activeChat.id, publicUrl, TipoMensaje.AUDIO).subscribe({
+      next: (res) => {
+        const fileDetails = [{
+          nombreArchivo: file.name,
+          contentType: file.type,
+          tamanoBytes: file.size,
+          fileName: res.storageFileName // Backend UUID filename
+        }];
+
+        // We can pass publicUrl as content if we want, or keep it empty as per plan. 
+        // If content isn't used for display of the image itself (managed via files list), empty is fine. 
+        // But if frontend expects it in content for provisional display before reload...
+        // Let's stick to the plan: content empty, files list has the data.
+        this.chatService.sendMessage(activeChat.id, '', TipoMensaje.AUDIO, fileDetails).subscribe({
           error: (err: any) => console.error('Failed to send audio', err)
         });
       },

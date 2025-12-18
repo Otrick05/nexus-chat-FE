@@ -2,6 +2,7 @@ import { Component, inject, Input, OnInit, signal, computed, ElementRef, effect 
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
 import { ChatStateService } from '../../../core/services/chat.state';
+import { TipoMensaje } from '../../../core/models/chat.models';
 import { AvatarUrlPipe } from '../../../shared/pipes/avatar-url.pipe';
 
 @Component({
@@ -28,6 +29,7 @@ export class ChatBody implements OnInit {
       //mockos
       return this.demoMessages().map(m => ({
         ...m,
+        type: TipoMensaje.TEXT, // Mock messages are text
         senderObj: {
           // Mock data has 'avatar' property with URL
           urlAvatar: m.avatar,
@@ -39,21 +41,32 @@ export class ChatBody implements OnInit {
       const realMsgs = this.chatState.activeMessages();
       const currentEmail = user.correo;
 
-      return realMsgs.map((m: any) => ({
-        id: m.id,
-        isOwn: m.correoRemitente === currentEmail,
+      return realMsgs.map((m: any) => {
+        const type = m.tipoMensaje || TipoMensaje.TEXT;
+        if (type === TipoMensaje.IMAGE) {
+          console.log(`DEBUG: ChatBody Computed - Msg ID ${m.id}. Content (Src):`, m.contenido);
+        }
 
-        senderObj: {
-          nombreUsuario: m.remitenteNombre,
-          urlAvatar: m.remitenteAvatar,
-          correo: m.correoRemitente
-        },
-        sender: m.remitenteNombre || m.correoRemitente,
-        text: m.contenido,
-        time: this.formatTime(m.timestamp)
-      }));
+        return {
+          id: m.id,
+          isOwn: m.correoRemitente === currentEmail,
+
+          senderObj: {
+            nombreUsuario: m.remitenteNombre,
+            urlAvatar: m.remitenteAvatar,
+            correo: m.correoRemitente
+          },
+          sender: m.remitenteNombre || m.correoRemitente,
+          text: m.contenido,
+          type: type,
+          time: this.formatTime(m.timestamp)
+        };
+      });
     }
   });
+
+  TipoMensaje = TipoMensaje; // Expose enum to template
+
 
   private demoMessages = signal<any[]>([]);
 
@@ -108,9 +121,13 @@ export class ChatBody implements OnInit {
     this.demoMessages.set(mockData);
   }
 
+
   private formatTime(isoString: string): string {
     const date = new Date(isoString);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
+  openMedia(url: string, type: string) {
+    window.open(url, '_blank');
+  }
 }
