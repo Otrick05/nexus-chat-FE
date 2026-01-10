@@ -4,15 +4,17 @@ import { ChatService } from '../../../core/services/chat.service';
 import { ChatStateService } from '../../../core/services/chat.state';
 import { UploadService } from '../../../core/services/upload.service';
 import { TipoMensaje } from '../../../core/models/chat.models';
+import { PickerComponent } from '@ctrl/ngx-emoji-mart';
 
 @Component({
   selector: 'app-chat-input',
-  imports: [FormsModule],
+  imports: [FormsModule, PickerComponent],
   templateUrl: './chat-input.html',
   styleUrl: './chat-input.scss'
 })
 export class ChatInput {
   messageText = '';
+  showEmojiPicker = false;
   private chatService = inject(ChatService);
   private chatState = inject(ChatStateService);
   private uploadService = inject(UploadService);
@@ -30,11 +32,28 @@ export class ChatInput {
   private timerInterval: any;
   private pendingAudioFile: File | null = null;
 
+  toggleEmojiPicker() {
+    this.showEmojiPicker = !this.showEmojiPicker;
+  }
+
+  addEmoji(event: any) {
+    const text = this.messageText;
+    const emoji = event.emoji.native;
+
+    // Insert at cursor position if possible, otherwise append
+    // Since we track simple string, appending to end is safest simplified approach, 
+    // but ideally we'd track cursor pos. For now, simple append is fine.
+    this.messageText += emoji;
+    this.showEmojiPicker = false; // Optional: close after pick or keep open? Usually keep open.
+  }
+
   sendMessage() {
     if (!this.messageText.trim()) return;
 
     const activeChat = this.chatState.activeChat();
     if (!activeChat) return;
+
+    this.showEmojiPicker = false; // Close on send
 
     const textToSend = this.messageText;
     this.messageText = ''; // Optimistic clear

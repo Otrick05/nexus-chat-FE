@@ -186,8 +186,17 @@ export class ChatStateService {
             if (isActive) {
                 newChat.conteoNoLeidos = 0;
             } else {
-                // If we are the sender, we shouldn't have unread messages typically, but backend source of truth controls this.
-                // However, for immediate UI feedback if backend lags:
+                // Check if we have a provisional/stub chat created by handleIncomingMessage
+                // Stubs typically have empty participants
+                const existingChat = current.get(chat.id);
+                const isStub = existingChat && existingChat.participantes && existingChat.participantes.length === 0;
+
+                // If it was a stub with unread messages, and the new payload says 0, likely the NEW_CHAT event didn't account for the message we just processed locally.
+                if (isStub && (existingChat.conteoNoLeidos || 0) > 0 && newChat.conteoNoLeidos === 0) {
+                    newChat.conteoNoLeidos = existingChat.conteoNoLeidos;
+                }
+
+                // If we are the sender, we shouldn't have unread messages typically
                 if (newChat.ultimoMensaje?.correoRemitente === currentUserEmail) {
                     newChat.conteoNoLeidos = 0;
                 }

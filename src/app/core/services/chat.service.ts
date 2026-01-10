@@ -106,12 +106,17 @@ export class ChatService {
 
                 // Map Backend DTO to Frontend 'mensaje' interface
                 let content = dto.contenido;
-                if (dto.tipoMensaje !== TipoMensaje.TEXT && dto.multimedia && dto.multimedia.length > 0) {
-                    // Backend sends 'urlStorage', fallback to 'url'
-                    content = dto.multimedia[0].urlStorage || dto.multimedia[0].url;
-                    console.log(`DEBUG: WS Media extracted URL:`, content);
-                } else if (dto.tipoMensaje !== TipoMensaje.TEXT) {
-                    console.warn(`DEBUG: WS Media Message has missing/empty multimedia array:`, dto);
+                let missingMultimedia = false;
+
+                if (dto.tipoMensaje !== TipoMensaje.TEXT) {
+                    if (dto.multimedia && dto.multimedia.length > 0) {
+                        // Backend sends 'urlStorage', fallback to 'url'
+                        content = dto.multimedia[0].urlStorage || dto.multimedia[0].url;
+                        console.log(`DEBUG: WS Media extracted URL:`, content);
+                    } else {
+                        console.warn(`DEBUG: WS Media Message has missing/empty multimedia array:`, dto);
+                        missingMultimedia = true;
+                    }
                 }
 
                 const msg: mensaje = {
@@ -126,6 +131,12 @@ export class ChatService {
                     isRead: true, // Incoming in active chat is read
                 };
                 this.state.upsertMessage(msg);
+
+                // Fix: If multimedia missing in Topic WS, refetch
+                if (missingMultimedia) {
+                    console.warn(`DEBUG: Multimedia missing in Topic WS for Msg ${dto.id}. Refetching chat ${chatId}...`);
+                    this.loadMessages(chatId, 0);
+                }
             },
             error: (err) => console.error('WS Error for chat ' + chatId, err)
         });
@@ -319,9 +330,15 @@ export class ChatService {
                             const msgDTO: MensajeNotificationDTO = event.payload;
 
                             let content = msgDTO.contenido;
-                            if (msgDTO.tipoMensaje !== TipoMensaje.TEXT && msgDTO.multimedia && msgDTO.multimedia.length > 0) {
-                                // Backend sends 'urlStorage', fallback to 'url'
-                                content = msgDTO.multimedia[0].urlStorage || msgDTO.multimedia[0].url;
+                            let missingMultimedia = false;
+
+                            if (msgDTO.tipoMensaje !== TipoMensaje.TEXT) {
+                                if (msgDTO.multimedia && msgDTO.multimedia.length > 0) {
+                                    // Backend sends 'urlStorage', fallback to 'url'
+                                    content = msgDTO.multimedia[0].urlStorage || msgDTO.multimedia[0].url;
+                                } else {
+                                    missingMultimedia = true;
+                                }
                             }
 
                             const msg: mensaje = {
@@ -337,6 +354,12 @@ export class ChatService {
                             };
                             console.log('Handling Incoming Message:', msg); // DEBUG LOG
                             this.state.handleIncomingMessage(msg, currentUserEmail);
+
+                            // Fix: If multimedia is missing in WS payload (bucket URL), fetch full message from REST
+                            if (missingMultimedia && this.state.activeChatId() === msgDTO.chatId) {
+                                console.warn(`DEBUG: Multimedia missing in WS notification for Msg ${msgDTO.id}. Refetching chat ${msgDTO.chatId}...`);
+                                this.loadMessages(msgDTO.chatId, 0);
+                            }
                             break;
 
                         case ChatEventType.NEW_CHAT:

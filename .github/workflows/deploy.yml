@@ -46,9 +46,9 @@ jobs:
     - name: Desplegar a VM 1
       run: |
         # --- ZONA DE EDICIÓN ---
-        PROJECT_ID="computo-en-la-nube-is503" 
+        PROJECT_ID="computo-en-la-nube-is03" 
         ZONE="us-central1-a"   # La zona de tu VM1 (ej. us-central1-a)
-        VM_NAME="vm-computo-is-503"
+        VM_NAME="nexus-chat-principal"
         
         # Revisa en tu compu local: haz 'ng build' y mira cómo se llama la carpeta dentro de dist
         # Usualmente es dist/nombre-de-tu-app/browser/*
@@ -75,9 +75,9 @@ jobs:
     - name: Desplegar a VM 2
       run: |
         # --- ZONA DE EDICIÓN ---
-        PROJECT_ID="computo-en-la-nube-is503"
+        PROJECT_ID="computo-en-la-nube-is03"
         ZONE="us-central1-a"   # Zona de tu VM2
-        VM_NAME="imagen-nexuschat-v1-20251107-010149"
+        VM_NAME="nexus-chat-espejo"
         SOURCE_DIR="dist/nexus-chat/browser"
 
         echo "Desplegando en $VM_NAME..."
@@ -98,6 +98,6 @@ jobs:
     - name: Reiniciar Nginx
       run: |
         # VM 1
-        gcloud compute ssh vm-computo-is-503 --zone=us-central1-a --tunnel-through-iap --command="sudo systemctl reload nginx"
+        gcloud compute ssh nexus-chat-principal --zone=us-central1-a --tunnel-through-iap --command="sudo systemctl reload nginx"
         # VM 2
-        gcloud compute ssh imagen-nexuschat-v1-20251107-010149 --zone=us-central1-a --tunnel-through-iap --command="sudo systemctl reload nginx"
+        gcloud compute ssh nexus-chat-espejo --zone=us-central1-a --tunnel-through-iap --command="sudo systemctl reload nginx"

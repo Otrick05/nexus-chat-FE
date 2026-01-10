@@ -118,6 +118,15 @@
   }
 }
 
+.emoji-picker-container {
+  position: absolute;
+  bottom: 70px;
+  right: 20px;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+}
+
 @keyframes blink {
   0% {
     opacity: 1;
@@ -130,4 +139,7 @@
   100% {
     opacity: 1;
   }
+
+
+
 }
