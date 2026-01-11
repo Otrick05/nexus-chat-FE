@@ -27,6 +27,7 @@ export class UploadService {
      * 3. Return the Public URL
      */
     uploadFile(file: File): Observable<string> {
+        console.log('UploadService: Starting upload process...' + file.name, file.type);
         return this.uploadFileSimple(file).pipe(map(res => res.publicUrl));
     }
 
@@ -48,7 +49,7 @@ export class UploadService {
                 // Map fields from verified backend DTO: fileName, signedUrl, contentType
                 const uploadUrl = data.signedUrl;
                 const storageFileName = data.fileName; // The UUID prefixed name
-
+                console.log('UploadService: Received signed URL:', uploadUrl);
                 if (!uploadUrl) {
                     console.error('ERROR: signedUrl is missing in response!', response);
                     throw new Error('signedUrl is missing');
